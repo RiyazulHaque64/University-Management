@@ -14,12 +14,16 @@ const routes = [
     route: userRoutes,
   },
   {
-    path: '/students',
+    path: '/admins',
     route: studentRoutes,
   },
   {
     path: '/faculties',
     route: facultyRoutes,
+  },
+  {
+    path: '/students',
+    route: studentRoutes,
   },
   {
     path: '/academic-semester',

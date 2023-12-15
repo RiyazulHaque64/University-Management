@@ -26,17 +26,19 @@ export const studentIdGenerator = async (payload: TAcademicSemester) => {
   return studentId;
 };
 
-export const facultyIdGenerator = async () => {
+export const facultyAndAdminIdGenerator = async (role: string) => {
   let idNumber = 1;
-  const findLastId = await UserModel.findOne(
-    { role: 'faculty' },
-    { id: 1, _id: 0 },
-  )
+  const findLastId = await UserModel.findOne({ role: role }, { id: 1, _id: 0 })
     .sort({ createdAt: -1 })
     .lean();
   if (findLastId) {
     idNumber += Number((findLastId.id as string).split('-')[1]);
   }
-  const facultyId = `F-${idNumber.toString().padStart(4, '0')}`;
-  return facultyId;
+  if (role === 'faculty') {
+    const facultyId = `F-${idNumber.toString().padStart(4, '0')}`;
+    return facultyId;
+  } else if (role === 'admin') {
+    const adminId = `A-${idNumber.toString().padStart(4, '0')}`;
+    return adminId;
+  }
 };
