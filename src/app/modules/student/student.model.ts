@@ -19,11 +19,15 @@ const studentNameSchema = new Schema<TStudentName>({
     //   },
     //   message: '{VALUE} must be capitalize!',
     // },
+    trim: true,
+    maxlength: [20, "Name cann't be more than 20 characters!"],
   },
   middleName: String,
   lastName: {
     type: String,
     required: [true, 'Last name is required!'],
+    trim: true,
+    maxlength: [20, "Name cann't be more than 20 characters!"],
   },
 });
 

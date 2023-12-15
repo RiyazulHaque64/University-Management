@@ -25,3 +25,18 @@ export const studentIdGenerator = async (payload: TAcademicSemester) => {
     (Number(await findLastId(payload)) + 1).toString().padStart(4, '0');
   return studentId;
 };
+
+export const facultyIdGenerator = async () => {
+  let idNumber = 1;
+  const findLastId = await UserModel.findOne(
+    { role: 'faculty' },
+    { id: 1, _id: 0 },
+  )
+    .sort({ createdAt: -1 })
+    .lean();
+  if (findLastId) {
+    idNumber += Number((findLastId.id as string).split('-')[1]);
+  }
+  const facultyId = `F-${idNumber.toString().padStart(4, '0')}`;
+  return facultyId;
+};
