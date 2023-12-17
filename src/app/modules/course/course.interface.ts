@@ -11,4 +11,5 @@ export interface TCourse {
   code: number;
   credits: number;
   preRequisiteCourses: TPreRequisiteCourse[];
+  isDeleted: boolean;
 }
