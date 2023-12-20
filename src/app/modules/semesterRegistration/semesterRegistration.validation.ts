@@ -9,6 +9,19 @@ const createSemesterRegistrationValidationSchema = z.object({
   maxCredit: z.number().default(15),
 });
 
+const updateSemesterRegistrationValidationSchema = z.object({
+  academicSemester: z.string().optional(),
+  status: z
+    .enum(['UPCOMING', 'ONGOING', 'ENDED'])
+    .default('UPCOMING')
+    .optional(),
+  startDate: z.string().datetime().optional(),
+  endDate: z.string().datetime().optional(),
+  minCredit: z.number().default(3).optional(),
+  maxCredit: z.number().default(15).optional(),
+});
+
 export const SemesterRegistrationValidations = {
   createSemesterRegistrationValidationSchema,
+  updateSemesterRegistrationValidationSchema,
 };
