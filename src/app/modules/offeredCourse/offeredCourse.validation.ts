@@ -1,6 +1,14 @@
 import { z } from 'zod';
 import { Days } from './offeredCourse.const';
 
+const timeValidationSchema = z.string().refine(
+  (time) => {
+    const regex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    return regex.test(time);
+  },
+  { message: 'Invalid time format, expected "HH:MM" in 24 hours format' },
+);
+
 const createOfferedCourseValidationSchema = z.object({
   offeredCourse: z
     .object({
@@ -12,20 +20,8 @@ const createOfferedCourseValidationSchema = z.object({
       maxCapacity: z.number(),
       section: z.number(),
       days: z.array(z.enum([...Days] as [string])),
-      startTime: z.string().refine(
-        (time) => {
-          const regex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
-          return regex.test(time);
-        },
-        { message: 'Invalid time format, expected "HH:MM" in 24 hours format' },
-      ),
-      endTime: z.string().refine(
-        (time) => {
-          const regex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
-          return regex.test(time);
-        },
-        { message: 'Invalid time format, expected "HH:MM" in 24 hours format' },
-      ),
+      startTime: timeValidationSchema,
+      endTime: timeValidationSchema,
     })
     .refine(
       (offeredCourse) => {
@@ -38,30 +34,22 @@ const createOfferedCourseValidationSchema = z.object({
 });
 
 const updateOfferedCourseValidationSchema = z.object({
-  faculty: z.string().optional(),
-  maxCapacity: z.number().optional(),
-  section: z.number().optional(),
-  days: z.array(z.enum([...Days] as [string])).optional(),
-  startTime: z
-    .string()
+  offeredCourse: z
+    .object({
+      faculty: z.string(),
+      maxCapacity: z.number(),
+      days: z.array(z.enum([...Days] as [string])),
+      startTime: timeValidationSchema,
+      endTime: timeValidationSchema,
+    })
     .refine(
-      (time) => {
-        const regex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
-        return regex.test(time);
+      (offeredCourse) => {
+        const start = new Date(`1970-01-01T${offeredCourse.startTime}:00`);
+        const end = new Date(`1970-01-01T${offeredCourse.endTime}:00`);
+        return end > start;
       },
-      { message: 'Invalid time format, expected "HH:MM" in 24 hours format' },
-    )
-    .optional(),
-  endTime: z
-    .string()
-    .refine(
-      (time) => {
-        const regex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
-        return regex.test(time);
-      },
-      { message: 'Invalid time format, expected "HH:MM" in 24 hours format' },
-    )
-    .optional(),
+      { message: 'Start time should be before end time' },
+    ),
 });
 
 export const OfferedCourseValidations = {
