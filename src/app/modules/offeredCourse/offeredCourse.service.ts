@@ -15,6 +15,10 @@ const createOfferedCourseIntoDB = async (payload: TOfferedCourse) => {
     academicDepartment,
     course,
     faculty,
+    section,
+    days,
+    startTime,
+    endTime,
   } = payload;
   const isSemesterRegistrationExits =
     await SemesterRegistrationModel.findById(semesterRegistration);
@@ -46,6 +50,47 @@ const createOfferedCourseIntoDB = async (payload: TOfferedCourse) => {
   if (!isFacultyExits) {
     throw new AppError(httpStatus.NOT_FOUND, 'Faculty is not found!');
   }
+  const isDepartmentBelongToFaculty = await AcademicDepartmentModel.findOne({
+    academicFaculty,
+    _id: academicDepartment,
+  });
+  if (!isDepartmentBelongToFaculty) {
+    throw new AppError(
+      httpStatus.NOT_FOUND,
+      `${isAcademicDepartmentExits?.name} is not belong to ${isAcademicFacultyExits?.name}`,
+    );
+  }
+  const iSameOfferedCourseExistsWithSameRegisteredSemisterWithSameSection =
+    await OfferedCourseModel.findOne({
+      semesterRegistration,
+      course,
+      section,
+    });
+  if (iSameOfferedCourseExistsWithSameRegisteredSemisterWithSameSection) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      `Offered course with same section is already exists!`,
+    );
+  }
+  const assignedShedules = await OfferedCourseModel.find({
+    semesterRegistration,
+    faculty,
+    days: { $in: days },
+  }).select('days startTime endTime');
+
+  assignedShedules?.forEach((shedule) => {
+    const existingStartTime = new Date(`1970-01-01T${shedule?.startTime}`);
+    const existingEndTime = new Date(`1970-01-01T${shedule?.endTime}`);
+    const newStartTime = new Date(`1970-01-01T${startTime}`);
+    const newEndTime = new Date(`1970-01-01T${endTime}`);
+
+    if (existingEndTime > newStartTime && existingStartTime < newEndTime) {
+      throw new AppError(
+        httpStatus.CONFLICT,
+        `${isFacultyExits?.name?.firstName} is not available at that time or day`,
+      );
+    }
+  });
   const result = await OfferedCourseModel.create({
     ...payload,
     academicSemester,
