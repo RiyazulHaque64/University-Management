@@ -64,7 +64,11 @@ const changePasswordIntoDB = async (
   );
   await UserModel.findOneAndUpdate(
     { id: userData?.userId, role: userData?.role },
-    { password: newHashedPassword },
+    {
+      password: newHashedPassword,
+      needsPasswordChange: false,
+      passwordChangeAt: new Date(),
+    },
     { new: true, runValidators: true },
   );
   return null;
