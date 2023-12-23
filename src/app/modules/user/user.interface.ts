@@ -20,7 +20,7 @@ export interface UserStaticModel extends Model<TUser> {
   ): Promise<boolean>;
   isJWTIssuedBeforePasswordChanged(
     passwordChangedTimeStamp: Date,
-    jwtIssuedTimeStamp: Date,
+    jwtIssuedTimeStamp: number,
   ): boolean;
 }
 
