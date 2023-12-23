@@ -21,6 +21,7 @@ const createStudentIntoDB = async (password: string, payload: TStudent) => {
   const userData: Partial<TUser> = {};
   userData.password = password || (config.default_password as string);
   userData.role = 'student';
+  userData.email = payload?.email;
 
   // Generate user or student id
   if (admissionSemester) {
@@ -66,6 +67,7 @@ const createFacultyIntoDB = async (password: string, payload: TFaculty) => {
   userData.id = await facultyAndAdminIdGenerator('faculty');
   userData.password = password || config.default_password;
   userData.role = 'faculty';
+  userData.email = payload?.email;
 
   const checkAcademicDepartment = await AcademicDepartmentModel.findById(
     payload?.academicDepartment,
@@ -111,6 +113,7 @@ const createAdminIntoDB = async (password: string, payload: TFaculty) => {
   userData.id = await facultyAndAdminIdGenerator('admin');
   userData.password = password || config.default_password;
   userData.role = 'admin';
+  userData.email = payload?.email;
 
   const session = await mongoose.startSession();
 
@@ -140,21 +143,24 @@ const createAdminIntoDB = async (password: string, payload: TFaculty) => {
   }
 };
 
+const getMeFromDB = async (userId: string, role: string) => {
+  let result = null;
+  if (role === 'student') {
+    result = await StudentModel.findOne({ id: userId }).populate('user');
+  }
+  if (role === 'faculty') {
+    result = await FacultyModel.findOne({ id: userId }).populate('user');
+  }
+  if (role === 'admin') {
+    result = await AdminModel.findOne({ id: userId }).populate('user');
+  }
+
+  return result;
+};
+
 export const userService = {
   createStudentIntoDB,
   createFacultyIntoDB,
   createAdminIntoDB,
+  getMeFromDB,
 };
-// const isUserExists = await StudentModel.findOne({ email: payload.email });
-// if (!isUserExists) {
-//   const newUser = await UserModel.create(userData);
-//   const { _id: defaultId, id: generatedId } = newUser;
-//   if (defaultId && generatedId) {
-//     payload.id = generatedId;
-//     payload.user = defaultId;
-//     const newStudent = await StudentModel.create(payload);
-//     return newStudent;
-//   }
-// } else {
-//   throw new Error('Email is already exists!');
-// }

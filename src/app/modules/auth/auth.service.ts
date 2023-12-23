@@ -7,6 +7,7 @@ import config from '../../config';
 import bcrypt from 'bcrypt';
 import { createToken } from './auth.utils';
 import jwt from 'jsonwebtoken';
+import sendEmail from '../../utils/sendEmail';
 
 const loginUser = async (payload: TLogin) => {
   const user = await UserModel.isUserExistsByCustomID(payload?.id);
@@ -118,13 +119,72 @@ const refreshToken = async (token: string) => {
   return accessToken;
 };
 
-const forgetPassword = (userId: string) => {
-  const passwordResetLink = `http://localhost:3000?userId`;
-  return passwordResetLink;
+const forgetPassword = async (userId: string) => {
+  const user = await UserModel.isUserExistsByCustomID(userId);
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, 'This user is not exists!');
+  }
+  if (user?.isDeleted) {
+    throw new AppError(httpStatus.FORBIDDEN, 'This user is deleted!');
+  }
+  if (user?.status === 'blocked') {
+    throw new AppError(httpStatus.FORBIDDEN, 'This user is blocked!');
+  }
+  const jwtPayload = {
+    userId: user?.id,
+    role: user?.role,
+  };
+  const resetToken = createToken(
+    jwtPayload,
+    config.jwt_access_secret as string,
+    '10m',
+  );
+  const passwordResetLink = `http://localhost:3000?id=${user?.id}&token=${resetToken}`;
+  console.log(passwordResetLink);
+  await sendEmail(user?.email, passwordResetLink);
+  return null;
 };
+
+const resetPassword = async (
+  token: string,
+  payload: { userId: string; newPassword: string },
+) => {
+  const user = await UserModel.isUserExistsByCustomID(payload?.userId);
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, 'This user is not exists!');
+  }
+  if (user?.isDeleted) {
+    throw new AppError(httpStatus.FORBIDDEN, 'This user is deleted!');
+  }
+  if (user?.status === 'blocked') {
+    throw new AppError(httpStatus.FORBIDDEN, 'This user is blocked!');
+  }
+  const decoded = jwt.verify(token, config.jwt_access_secret as string);
+  const { userId, role } = decoded as JwtPayload;
+  if (userId !== user?.id && role !== user?.role) {
+    throw new AppError(httpStatus.FORBIDDEN, 'You are forbidden!');
+  }
+  const hashedPassword = await bcrypt.hash(
+    payload?.newPassword,
+    Number(config.salt_rounds),
+  );
+  await UserModel.findOneAndUpdate(
+    { id: userId, role: role },
+    {
+      password: hashedPassword,
+      passwordChangeAt: new Date(),
+      needsPasswordChange: false,
+    },
+    { new: true, runValidators: true },
+  );
+
+  return null;
+};
+
 export const AuthServices = {
   loginUser,
   changePasswordIntoDB,
   refreshToken,
   forgetPassword,
+  resetPassword,
 };

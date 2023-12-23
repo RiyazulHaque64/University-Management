@@ -28,4 +28,6 @@ router.post(
   userCotroller.createAdmin,
 );
 
+router.get('/me', auth('admin', 'student', 'faculty'), userCotroller.getMe);
+
 export const userRoutes = router;
