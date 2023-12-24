@@ -158,9 +158,29 @@ const getMeFromDB = async (userId: string, role: string) => {
   return result;
 };
 
+const changeStatusIntoDB = async (id: string, payload: { status: string }) => {
+  const user = await UserModel.findById(id);
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, 'This user is not exists!');
+  }
+  if (user?.isDeleted) {
+    throw new AppError(httpStatus.FORBIDDEN, 'This user is deleted!');
+  }
+  const result = await UserModel.findByIdAndUpdate(id, payload, {
+    new: true,
+    runValidators: true,
+  });
+  if (payload.status === 'in-progress') {
+    return result;
+  } else {
+    return null;
+  }
+};
+
 export const userService = {
   createStudentIntoDB,
   createFacultyIntoDB,
   createAdminIntoDB,
   getMeFromDB,
+  changeStatusIntoDB,
 };

@@ -47,9 +47,20 @@ const getMe = catchAsync(async (req, res) => {
   });
 });
 
+const changeStatus = catchAsync(async (req, res) => {
+  const result = await userService.changeStatusIntoDB(req.params.id, req.body);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'User status updated successfully',
+    data: result,
+  });
+});
+
 export const userCotroller = {
   createStudent,
   createFaculty,
   createAdmin,
   getMe,
+  changeStatus,
 };
