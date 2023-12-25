@@ -12,8 +12,13 @@ import { TFaculty } from '../faculty/faculty.interface';
 import AcademicDepartmentModel from '../academicDepartment/academicDepartment.model';
 import FacultyModel from '../faculty/faculty.model';
 import AdminModel from '../admin/admin.model';
+import { sendImageToCloudinary } from '../../utils/sendImageToCloudinary';
 
-const createStudentIntoDB = async (password: string, payload: TStudent) => {
+const createStudentIntoDB = async (
+  password: string,
+  payload: TStudent,
+  filePath: string,
+) => {
   const admissionSemester = await AcademicSemesterModel.findById(
     payload.admissionSemester,
   );
@@ -32,10 +37,16 @@ const createStudentIntoDB = async (password: string, payload: TStudent) => {
       'Selected admission semester has not exists!',
     );
   }
+  const imageName = payload?.name?.firstName + '-' + userData.id;
   const session = await mongoose.startSession();
 
   try {
     session.startTransaction();
+    const { secure_url } = (await sendImageToCloudinary(
+      imageName,
+      filePath,
+    )) as Record<string, unknown>;
+    payload.profileImg = secure_url as string;
     const newUser = await UserModel.create([userData], { session });
     if (!newUser.length) {
       throw new AppError(httpStatus.BAD_REQUEST, 'Failed to create user!');

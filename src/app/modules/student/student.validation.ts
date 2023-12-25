@@ -60,51 +60,55 @@ const updateLocalGuardianValidationSchema = z.object({
 });
 
 const createStudentValidationSchema = z.object({
-  password: z
-    .string({
-      invalid_type_error: 'Password must be string!',
-    })
-    .max(20, { message: "Password can't be more than 20 characters!" })
-    .optional(),
-  student: z.object({
-    name: studentNameValidationSchema,
-    gender: z.enum(['male', 'female', 'other'], {
-      required_error: 'Gender must be required!',
-    }),
-    email: z.string().email({ message: 'Invalid email address!' }),
-    dateOfBirth: z.string().optional(),
-    contactNo: z.string(),
-    emergencyContactNo: z.string(),
-    bloodGroup: z
-      .enum(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'])
+  body: z.object({
+    password: z
+      .string({
+        invalid_type_error: 'Password must be string!',
+      })
+      .max(20, { message: "Password can't be more than 20 characters!" })
       .optional(),
-    presentAddress: z.string(),
-    permanentAddress: z.string(),
-    guardian: guardianValidationSchema,
-    localGuardian: localGuardianValidationSchema,
-    admissionSemester: z.string(),
-    profileImg: z.string(),
+    student: z.object({
+      name: studentNameValidationSchema,
+      gender: z.enum(['male', 'female', 'other'], {
+        required_error: 'Gender must be required!',
+      }),
+      email: z.string().email({ message: 'Invalid email address!' }),
+      dateOfBirth: z.string().optional(),
+      contactNo: z.string(),
+      emergencyContactNo: z.string(),
+      bloodGroup: z
+        .enum(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'])
+        .optional(),
+      presentAddress: z.string(),
+      permanentAddress: z.string(),
+      guardian: guardianValidationSchema,
+      localGuardian: localGuardianValidationSchema,
+      admissionSemester: z.string(),
+      // profileImg: z.string(),
+    }),
   }),
 });
 
 const updateStudentValidationSchema = z.object({
-  student: z.object({
-    name: updateStudentNameValidationSchema,
-    gender: z.enum(['male', 'female', 'other']).optional(),
-    email: z.string().email({ message: 'Invalid email address!' }).optional(),
-    dateOfBirth: z.string().optional().optional(),
-    contactNo: z.string().optional(),
-    emergencyContactNo: z.string().optional(),
-    bloodGroup: z
-      .enum(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'])
-      .optional()
-      .optional(),
-    presentAddress: z.string().optional(),
-    permanentAddress: z.string().optional(),
-    guardian: updateGuardianValidationSchema,
-    localGuardian: updateLocalGuardianValidationSchema,
-    admissionSemester: z.string().optional(),
-    profileImg: z.string().optional(),
+  body: z.object({
+    student: z.object({
+      name: updateStudentNameValidationSchema,
+      gender: z.enum(['male', 'female', 'other']).optional(),
+      email: z.string().email({ message: 'Invalid email address!' }).optional(),
+      dateOfBirth: z.string().optional().optional(),
+      contactNo: z.string().optional(),
+      emergencyContactNo: z.string().optional(),
+      bloodGroup: z
+        .enum(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'])
+        .optional()
+        .optional(),
+      presentAddress: z.string().optional(),
+      permanentAddress: z.string().optional(),
+      guardian: updateGuardianValidationSchema,
+      localGuardian: updateLocalGuardianValidationSchema,
+      admissionSemester: z.string().optional(),
+      // profileImg: z.string().optional(),
+    }),
   }),
 });
 
