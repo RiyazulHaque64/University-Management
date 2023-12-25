@@ -5,6 +5,7 @@ import { TEnrolledCourse } from './enrolledCourse.interface';
 import EnrolledCourseModel from './enrolledCourse.model';
 import { StudentModel } from '../student/student.model';
 import mongoose from 'mongoose';
+import app from '../../../app';
 
 const enrolledCourseIntoDB = async (id: string, payload: TEnrolledCourse) => {
   const isOfferedCourseExists = await OfferedCourseModel.findById(
@@ -34,17 +35,30 @@ const enrolledCourseIntoDB = async (id: string, payload: TEnrolledCourse) => {
   const session = await mongoose.startSession();
   try {
     session.startTransaction();
-    const result = await EnrolledCourseModel.create({
-      semesterRegistration: isOfferedCourseExists?.semesterRegistration,
-      academicSemester: isOfferedCourseExists?.academicSemester,
-      academicFaculty: isOfferedCourseExists?.academicFaculty,
-      academicDepartment: isOfferedCourseExists?.academicDepartment,
-      offeredCourse: payload?.offeredCourse,
-      course: isOfferedCourseExists?.course,
-      student: student?._id,
-      faculty: isOfferedCourseExists?.faculty,
-      isEnrolled: true,
-    });
+    const result = await EnrolledCourseModel.create(
+      [
+        {
+          semesterRegistration: isOfferedCourseExists?.semesterRegistration,
+          academicSemester: isOfferedCourseExists?.academicSemester,
+          academicFaculty: isOfferedCourseExists?.academicFaculty,
+          academicDepartment: isOfferedCourseExists?.academicDepartment,
+          offeredCourse: payload?.offeredCourse,
+          course: isOfferedCourseExists?.course,
+          student: student?._id,
+          faculty: isOfferedCourseExists?.faculty,
+          isEnrolled: true,
+        },
+      ],
+      { session },
+    );
+    if (!result.length) {
+      throw new AppError(
+        httpStatus.INTERNAL_SERVER_ERROR,
+        'Failed to enrolled course!',
+      );
+    }
+    await session.commitTransaction();
+    await session.endSession();
     return result;
   } catch (error) {
     await session.abortTransaction();
