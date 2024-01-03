@@ -5,7 +5,7 @@ import { TEnrolledCourse } from './enrolledCourse.interface';
 import EnrolledCourseModel from './enrolledCourse.model';
 import { StudentModel } from '../student/student.model';
 import mongoose from 'mongoose';
-import app from '../../../app';
+import SemesterRegistrationModel from '../semesterRegistration/semesterRegistration.model';
 
 const enrolledCourseIntoDB = async (id: string, payload: TEnrolledCourse) => {
   const isOfferedCourseExists = await OfferedCourseModel.findById(
@@ -32,6 +32,41 @@ const enrolledCourseIntoDB = async (id: string, payload: TEnrolledCourse) => {
   if (isOfferedCourseExists.maxCapacity <= 0) {
     throw new AppError(httpStatus.BAD_GATEWAY, 'Room is full!');
   }
+  const semesterRegistration = await SemesterRegistrationModel.findById(
+    isOfferedCourseExists.semesterRegistration,
+  ).select('maxCredit');
+
+  const enrolledCourses = await EnrolledCourseModel.aggregate([
+    {
+      $match: {
+        semesterRegistration: isOfferedCourseExists.semesterRegistration,
+        student: student._id,
+      },
+    },
+    {
+      $lookup: {
+        from: 'courses',
+        foreignField: '_id',
+        localField: 'course',
+        as: 'enrolledCourseData',
+      },
+    },
+    {
+      $unwind: '$enrolledCourseData',
+    },
+    {
+      $group: {
+        _id: null,
+        totalEnrolledCredits: { $sum: '$enrolledCourseData.credits' },
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        totalEnrolledCredits: 1,
+      },
+    },
+  ]);
   const session = await mongoose.startSession();
   try {
     session.startTransaction();
