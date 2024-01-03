@@ -46,7 +46,7 @@ const enrolledCourseSchema = new Schema<TEnrolledCourse>({
     default: 'NA',
   },
   gradePoints: { type: Number, required: true, min: 0, max: 4, default: 0 },
-  isCompleted: { type: Boolean, required: true },
+  isCompleted: { type: Boolean, default: false },
 });
 
 const EnrolledCourseModel = model('EnrolledCourse', enrolledCourseSchema);

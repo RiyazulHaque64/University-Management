@@ -12,7 +12,7 @@ const enrolledCourse = catchAsync(async (req, res) => {
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: 'Academic faculty is created successfully!',
+    message: 'Enrolled course successfully!',
     data: result,
   });
 });
