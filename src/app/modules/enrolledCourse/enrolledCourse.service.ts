@@ -5,7 +5,10 @@ import { TEnrolledCourse } from './enrolledCourse.interface';
 import EnrolledCourseModel from './enrolledCourse.model';
 import { StudentModel } from '../student/student.model';
 import mongoose from 'mongoose';
+<<<<<<< HEAD
 import SemesterRegistrationModel from '../semesterRegistration/semesterRegistration.model';
+=======
+>>>>>>> c3cdcb5e0a41bbf22f4defefd259805dcf6449f2
 
 const enrolledCourseIntoDB = async (id: string, payload: TEnrolledCourse) => {
   const isOfferedCourseExists = await OfferedCourseModel.findById(
@@ -23,7 +26,7 @@ const enrolledCourseIntoDB = async (id: string, payload: TEnrolledCourse) => {
     course: payload?.offeredCourse,
     student: student?._id,
   });
-  if (!isStudentAlreadyEnrolled) {
+  if (isStudentAlreadyEnrolled) {
     throw new AppError(
       httpStatus.CONFLICT,
       'Student is already enrolled in this course!',
@@ -92,6 +95,12 @@ const enrolledCourseIntoDB = async (id: string, payload: TEnrolledCourse) => {
         'Failed to enrolled course!',
       );
     }
+    const maxCapacity = isOfferedCourseExists.maxCapacity;
+    await OfferedCourseModel.findByIdAndUpdate(
+      isOfferedCourseExists._id,
+      { maxCapacity: maxCapacity - 1 },
+      { session },
+    );
     await session.commitTransaction();
     await session.endSession();
     return result;
