@@ -1,14 +1,12 @@
 import httpStatus from 'http-status';
+import mongoose from 'mongoose';
 import AppError from '../../error/appError';
+import CourseModel from '../course/course.model';
 import OfferedCourseModel from '../offeredCourse/offeredCourse.model';
+import SemesterRegistrationModel from '../semesterRegistration/semesterRegistration.model';
+import { StudentModel } from '../student/student.model';
 import { TEnrolledCourse } from './enrolledCourse.interface';
 import EnrolledCourseModel from './enrolledCourse.model';
-import { StudentModel } from '../student/student.model';
-import mongoose from 'mongoose';
-<<<<<<< HEAD
-import SemesterRegistrationModel from '../semesterRegistration/semesterRegistration.model';
-=======
->>>>>>> c3cdcb5e0a41bbf22f4defefd259805dcf6449f2
 
 const enrolledCourseIntoDB = async (id: string, payload: TEnrolledCourse) => {
   const isOfferedCourseExists = await OfferedCourseModel.findById(
@@ -17,6 +15,7 @@ const enrolledCourseIntoDB = async (id: string, payload: TEnrolledCourse) => {
   if (!isOfferedCourseExists) {
     throw new AppError(httpStatus.NOT_FOUND, 'Offered course is not found!');
   }
+  const course = await CourseModel.findById(isOfferedCourseExists.course);
   const student = await StudentModel.findOne({ id }).select('_id');
   if (!student) {
     throw new AppError(httpStatus.NOT_FOUND, 'Student is not found!');
@@ -70,6 +69,19 @@ const enrolledCourseIntoDB = async (id: string, payload: TEnrolledCourse) => {
       },
     },
   ]);
+
+  const totalCredits =
+    enrolledCourses.length > 0 ? enrolledCourses[0].totalEnrolledCredits : 0;
+  if (
+    totalCredits &&
+    semesterRegistration?.maxCredit &&
+    totalCredits + course?.credits > semesterRegistration?.maxCredit
+  ) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      'You have excedded maximum number of credits!',
+    );
+  }
   const session = await mongoose.startSession();
   try {
     session.startTransaction();
