@@ -1,6 +1,7 @@
-import { academicSemesterControllers } from './academicSemester.controller';
 import { Router } from 'express';
+import auth from '../../middlewares/auth';
 import validateRequest from '../../middlewares/validateRequest';
+import { academicSemesterControllers } from './academicSemester.controller';
 import { academicSemesterValidations } from './academicSemester.validation';
 
 const router = Router();
@@ -13,6 +14,7 @@ router.post(
 
 router.get(
   '/academic-semesters',
+  auth('admin'),
   academicSemesterControllers.getAllAcademicSemesters,
 );
 

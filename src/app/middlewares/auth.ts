@@ -1,11 +1,11 @@
-import jwt, { JwtPayload } from 'jsonwebtoken';
 import { NextFunction, Request, Response } from 'express';
-import catchAsync from '../utils/catchAsync';
-import AppError from '../error/appError';
 import httpStatus from 'http-status';
+import jwt, { JwtPayload } from 'jsonwebtoken';
 import config from '../config';
+import AppError from '../error/appError';
 import { TUserRole } from '../modules/user/user.interface';
 import { UserModel } from '../modules/user/user.model';
+import catchAsync from '../utils/catchAsync';
 
 const auth = (...requiredRoles: TUserRole[]) => {
   return catchAsync(async (req: Request, res: Response, next: NextFunction) => {
@@ -13,10 +13,15 @@ const auth = (...requiredRoles: TUserRole[]) => {
     if (!token) {
       throw new AppError(httpStatus.UNAUTHORIZED, 'You are not autorized!');
     }
-    const decoded = jwt.verify(
-      token,
-      config.jwt_access_secret as string,
-    ) as JwtPayload;
+    let decoded;
+    try {
+      decoded = jwt.verify(
+        token,
+        config.jwt_access_secret as string,
+      ) as JwtPayload;
+    } catch (error) {
+      throw new AppError(httpStatus.UNAUTHORIZED, 'You are not autorized!');
+    }
     const { userId, role, iat } = decoded;
     const user = await UserModel.isUserExistsByCustomID(userId);
     if (!user) {
