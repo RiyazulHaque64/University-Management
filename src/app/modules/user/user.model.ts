@@ -1,7 +1,7 @@
-import { Schema, model } from 'mongoose';
-import { TUser, UserStaticModel } from './user.interface';
 import bcrypt from 'bcrypt';
+import { Schema, model } from 'mongoose';
 import config from '../../config';
+import { TUser, UserStaticModel } from './user.interface';
 
 const userSchema = new Schema<TUser, UserStaticModel>(
   {
@@ -26,7 +26,7 @@ const userSchema = new Schema<TUser, UserStaticModel>(
     passwordChangeAt: Date,
     role: {
       type: String,
-      enum: ['admin', 'student', 'faculty'],
+      enum: ['super-admin', 'admin', 'student', 'faculty'],
     },
     status: {
       type: String,

@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import validateRequest from '../../middlewares/validateRequest';
-import { OfferedCourseValidations } from './offeredCourse.validation';
 import { OfferedCourseControllers } from './offeredCourse.controller';
+import { OfferedCourseValidations } from './offeredCourse.validation';
 
 const router = Router();
 
@@ -13,6 +13,12 @@ router.post(
 
 router.patch(
   '/:id',
+  validateRequest(OfferedCourseValidations.updateOfferedCourseValidationSchema),
+  OfferedCourseControllers.updateOfferedCourse,
+);
+
+router.get(
+  '/my-offered-courses',
   validateRequest(OfferedCourseValidations.updateOfferedCourseValidationSchema),
   OfferedCourseControllers.updateOfferedCourse,
 );

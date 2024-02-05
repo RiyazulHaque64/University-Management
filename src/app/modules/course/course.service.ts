@@ -1,9 +1,9 @@
+import httpStatus from 'http-status';
 import mongoose from 'mongoose';
 import QueryBuilder from '../../builder/QueryBuilder';
+import AppError from '../../error/appError';
 import { TCourse, TCourseFaculties } from './course.interface';
 import CourseModel, { CourseFacultiesModel } from './course.model';
-import AppError from '../../error/appError';
-import httpStatus from 'http-status';
 
 const createCourseIntoDB = async (payload: TCourse) => {
   const result = await CourseModel.create(payload);
@@ -23,6 +23,7 @@ const getAllCoursesFromDB = async (query: Record<string, unknown>) => {
     .fields();
 
   const result = await courseQuery.queryModel;
+  // const meta = await courseQuery.countTotal()
   return result;
 };
 
@@ -117,6 +118,13 @@ const assingFacultiesWithCourseIntoDB = async (
   return result;
 };
 
+const getFacultiesWithCourseFromDB = async (id: string) => {
+  const result = await CourseFacultiesModel.findOne({ course: id }).populate(
+    'faculties',
+  );
+  return result;
+};
+
 const removeFacultiesFromCourseIntoDB = async (
   id: string,
   payload: TCourseFaculties,
@@ -139,4 +147,5 @@ export const CourseServices = {
   deleteCourseFromDB,
   assingFacultiesWithCourseIntoDB,
   removeFacultiesFromCourseIntoDB,
+  getFacultiesWithCourseFromDB,
 };
