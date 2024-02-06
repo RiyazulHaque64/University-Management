@@ -5,12 +5,12 @@ const superAdmin = {
   id: 'SA-001',
   email: 'riyazulhaque64@gmail.com',
   password: config.super_admin_pass,
-  role: 'super-admin',
+  role: 'superAdmin',
   status: 'in-progress',
 };
 
 export const seedSuperAdmin = async () => {
-  const isSuperAdminExists = await UserModel.findOne({ role: 'super-admin' });
+  const isSuperAdminExists = await UserModel.findOne({ role: 'superAdmin' });
   if (!isSuperAdminExists) {
     await UserModel.create(superAdmin);
   }

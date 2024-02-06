@@ -1,3 +1,5 @@
+import { Model, Types } from 'mongoose';
+
 export type TMonth =
   | 'January'
   | 'February'
@@ -24,4 +26,11 @@ export interface TAcademicSemester {
   year: string;
   startMonth: TMonth;
   endMonth: TMonth;
+}
+
+export interface TAcademicSemesterMethod extends Model<TAcademicSemester> {
+  isAcademicSemesterExists(
+    // eslint-disable-next-line no-unused-vars
+    id: Types.ObjectId,
+  ): Promise<TAcademicSemester | null>;
 }

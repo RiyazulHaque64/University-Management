@@ -1,6 +1,6 @@
 import { v2 as cloudinary } from 'cloudinary';
-import multer from 'multer';
 import fs from 'fs';
+import multer from 'multer';
 
 cloudinary.config({
   cloud_name: 'db2nfoquk',
@@ -8,7 +8,10 @@ cloudinary.config({
   api_secret: 'fLh0BNcJaxhHd1GUzhijTxtk8-E',
 });
 
-export const sendImageToCloudinary = (imgName: string, path: string) => {
+export const sendImageToCloudinary = (
+  imgName: string,
+  path: string,
+): Promise<Record<string, unknown>> => {
   return new Promise((resolve, reject) => {
     cloudinary.uploader.upload(
       path,
@@ -17,7 +20,7 @@ export const sendImageToCloudinary = (imgName: string, path: string) => {
         if (error) {
           reject(error);
         }
-        resolve(result);
+        resolve(result as Record<string, unknown>);
         fs.unlink(path, (err) => {
           if (err) {
             console.log(err);

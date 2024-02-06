@@ -49,7 +49,6 @@ const createAdminValidationSchema = z.object({
         .optional(),
       presentAddress: z.string(),
       permanentAddress: z.string(),
-      profileImg: z.string(),
     }),
   }),
 });
@@ -70,7 +69,6 @@ const updateAdminValidationSchema = z.object({
       presentAddress: z.string().optional(),
       permanentAddress: z.string().optional(),
       admissionSemester: z.string().optional(),
-      profileImg: z.string().optional(),
     }),
   }),
 });

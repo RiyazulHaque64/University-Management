@@ -1,12 +1,15 @@
 import { Router } from 'express';
+import auth from '../../middlewares/auth';
 import validateRequest from '../../middlewares/validateRequest';
-import { AcademicDepartmentValidations } from './academicDepartment.validation';
+import { USER_ROLE } from '../user/user.constant';
 import { AcademicDepartmentControllers } from './academicDepartment.controller';
+import { AcademicDepartmentValidations } from './academicDepartment.validation';
 
 const router = Router();
 
 router.post(
   '/create-academic-department',
+  auth(USER_ROLE.superAdmin, USER_ROLE.admin),
   validateRequest(
     AcademicDepartmentValidations.createAcademicDepartmentValidationSchema,
   ),
@@ -15,12 +18,18 @@ router.post(
 
 router.get(
   '/academic-departments',
+  auth(USER_ROLE.superAdmin, USER_ROLE.admin),
   AcademicDepartmentControllers.getAllAcademicDepartments,
 );
 
-router.get('/:id', AcademicDepartmentControllers.getAnAcademicDepartment);
+router.get(
+  '/:id',
+  auth(USER_ROLE.superAdmin, USER_ROLE.admin),
+  AcademicDepartmentControllers.getAnAcademicDepartment,
+);
 router.patch(
   '/:id',
+  auth(USER_ROLE.superAdmin, USER_ROLE.admin),
   validateRequest(
     AcademicDepartmentValidations.updateAcademicDepartmentValidationSchema,
   ),

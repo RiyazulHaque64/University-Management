@@ -1,4 +1,4 @@
-import { Types } from 'mongoose';
+import { Model, Types } from 'mongoose';
 
 export type TUserName = {
   firstName: string;
@@ -22,4 +22,11 @@ export interface TFaculty {
   profileImg?: string;
   academicDepartment: Types.ObjectId;
   isDeleted: boolean;
+}
+
+export interface TFacultyMethod extends Model<TFaculty> {
+  isFacultyExists(
+    // eslint-disable-next-line no-unused-vars
+    id: Types.ObjectId,
+  ): Promise<TFaculty | null>;
 }

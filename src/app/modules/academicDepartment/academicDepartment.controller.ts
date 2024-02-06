@@ -1,4 +1,5 @@
 import httpStatus from 'http-status';
+import { Types } from 'mongoose';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { AcademicDepartmentServices } from './academicDepartment.service';
@@ -27,7 +28,7 @@ const getAllAcademicDepartments = catchAsync(async (req, res) => {
 
 const getAnAcademicDepartment = catchAsync(async (req, res) => {
   const result = await AcademicDepartmentServices.getAnAcademicDepartmentFromDB(
-    req.params.id,
+    new Types.ObjectId(req.params.id),
   );
   sendResponse(res, {
     statusCode: httpStatus.OK,

@@ -1,4 +1,4 @@
-import { Types } from 'mongoose';
+import { Model, Types } from 'mongoose';
 
 export type TPreRequisiteCourse = {
   course: Types.ObjectId;
@@ -17,4 +17,11 @@ export interface TCourse {
 export interface TCourseFaculties {
   course: Types.ObjectId;
   faculties: [Types.ObjectId];
+}
+
+export interface TCourseMethod extends Model<TCourse> {
+  isCourseExists(
+    // eslint-disable-next-line no-unused-vars
+    id: Types.ObjectId,
+  ): Promise<TCourse | null>;
 }

@@ -1,4 +1,5 @@
 import httpStatus from 'http-status';
+import { Types } from 'mongoose';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { FacultyServices } from './faculty.service';
@@ -14,7 +15,9 @@ const getAllFaculties = catchAsync(async (req, res) => {
 });
 
 const getFaculty = catchAsync(async (req, res) => {
-  const result = await FacultyServices.getFacultyFromDB(req.params.id);
+  const result = await FacultyServices.getFacultyFromDB(
+    new Types.ObjectId(req.params.id),
+  );
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,

@@ -1,20 +1,28 @@
+import httpStatus from 'http-status';
+import { Types } from 'mongoose';
+import AppError from '../../error/appError';
+import AcademicFaculty from '../academicFaculty/academicFaculty.model';
 import { TAcademicDepartment } from './academicDepartment.interface';
-import AcademicDepartmentModel from './academicDepartment.model';
+import AcademicDepartment from './academicDepartment.model';
 
 const createAcademicDepartmentIntoDB = async (payload: TAcademicDepartment) => {
-  const result = await AcademicDepartmentModel.create(payload);
+  const academicFaculty = await AcademicFaculty.findById(
+    payload.academicFaculty,
+  );
+  if (!academicFaculty) {
+    throw new AppError(httpStatus.NOT_FOUND, "Academic faculty doesn't exists");
+  }
+  const result = await AcademicDepartment.create(payload);
   return result;
 };
 
 const getAllAcademicDepartmentFromDB = async () => {
-  const result =
-    await AcademicDepartmentModel.find().populate('academicFaculty');
+  const result = await AcademicDepartment.find().populate('academicFaculty');
   return result;
 };
 
-const getAnAcademicDepartmentFromDB = async (id: string) => {
-  const result =
-    await AcademicDepartmentModel.findById(id).populate('academicFaculty');
+const getAnAcademicDepartmentFromDB = async (id: Types.ObjectId) => {
+  const result = await AcademicDepartment.isAcademicDepartmentExists(id);
   return result;
 };
 
@@ -22,11 +30,11 @@ const updateAnAcademicDepartmentIntoDB = async (
   id: string,
   payload: TAcademicDepartment,
 ) => {
-  const result = await AcademicDepartmentModel.findOneAndUpdate(
+  const result = await AcademicDepartment.findOneAndUpdate(
     { _id: id },
     payload,
     { new: true },
-  );
+  ).populate('academicFaculty');
   return result;
 };
 

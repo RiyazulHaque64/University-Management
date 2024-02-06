@@ -1,4 +1,5 @@
 import httpStatus from 'http-status';
+import { Types } from 'mongoose';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { CourseServices } from './course.service';
@@ -24,7 +25,9 @@ const getAllCourses = catchAsync(async (req, res) => {
 });
 
 const getCourse = catchAsync(async (req, res) => {
-  const result = await CourseServices.getCourseFromDB(req.params.id);
+  const result = await CourseServices.getCourseFromDB(
+    new Types.ObjectId(req.params.id),
+  );
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
@@ -58,7 +61,7 @@ const deleteCourse = catchAsync(async (req, res) => {
 
 const assignFacultiesWithCourse = catchAsync(async (req, res) => {
   const result = await CourseServices.assingFacultiesWithCourseIntoDB(
-    req.params.courseId,
+    new Types.ObjectId(req.params.courseId),
     req.body,
   );
   sendResponse(res, {
@@ -71,7 +74,7 @@ const assignFacultiesWithCourse = catchAsync(async (req, res) => {
 
 const getFacultiesWithCourse = catchAsync(async (req, res) => {
   const result = await CourseServices.getFacultiesWithCourseFromDB(
-    req.params.id,
+    req.params.courseId,
   );
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -83,7 +86,7 @@ const getFacultiesWithCourse = catchAsync(async (req, res) => {
 
 const removeFacultiesFromCourse = catchAsync(async (req, res) => {
   const result = await CourseServices.removeFacultiesFromCourseIntoDB(
-    req.params.courseId,
+    new Types.ObjectId(req.params.courseId),
     req.body,
   );
   sendResponse(res, {

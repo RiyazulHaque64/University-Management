@@ -1,10 +1,11 @@
+import { Types } from 'mongoose';
 import { semesterNameAndCodeMapper } from './academicSemester.constant';
 import { TAcademicSemester } from './academicSemester.interface';
-import AcademicSemesterModel from './academicSemester.model';
+import AcademicSemester from './academicSemester.model';
 
 const createAcademicSemesterIntoDB = async (payload: TAcademicSemester) => {
   if (semesterNameAndCodeMapper[payload.name] === payload.code) {
-    const result = await AcademicSemesterModel.create(payload);
+    const result = await AcademicSemester.create(payload);
     return result;
   } else {
     throw new Error('Invalid semester code!');
@@ -12,12 +13,12 @@ const createAcademicSemesterIntoDB = async (payload: TAcademicSemester) => {
 };
 
 const getAllAcademicSemestersFromDB = async () => {
-  const result = await AcademicSemesterModel.find();
+  const result = await AcademicSemester.find();
   return result;
 };
 
-const getAnAcademicSemesterFromDB = async (id: string) => {
-  const result = await AcademicSemesterModel.findById(id);
+const getAnAcademicSemesterFromDB = async (id: Types.ObjectId) => {
+  const result = await AcademicSemester.isAcademicSemesterExists(id);
   return result;
 };
 

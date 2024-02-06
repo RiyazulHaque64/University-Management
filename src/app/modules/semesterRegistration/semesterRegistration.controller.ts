@@ -1,6 +1,7 @@
 import httpStatus from 'http-status';
-import sendResponse from '../../utils/sendResponse';
+import { Types } from 'mongoose';
 import catchAsync from '../../utils/catchAsync';
+import sendResponse from '../../utils/sendResponse';
 import { SemesterRegistrationServices } from './semesterRegistration.service';
 
 const semesterRegistration = catchAsync(async (req, res) => {
@@ -31,7 +32,7 @@ const getAllsemesterRegistration = catchAsync(async (req, res) => {
 const getSinglesemesterRegistration = catchAsync(async (req, res) => {
   const result =
     await SemesterRegistrationServices.getSingleRegisteredSemesterFromDB(
-      req.params.id,
+      new Types.ObjectId(req.params.id),
     );
   sendResponse(res, {
     statusCode: httpStatus.OK,

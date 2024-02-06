@@ -1,7 +1,8 @@
-import { academicSemesterServices } from './academicSemester.service';
-import sendResponse from '../../utils/sendResponse';
 import httpStatus from 'http-status';
+import { Types } from 'mongoose';
 import catchAsync from '../../utils/catchAsync';
+import sendResponse from '../../utils/sendResponse';
+import { academicSemesterServices } from './academicSemester.service';
 
 const createAcademicSemester = catchAsync(async (req, res) => {
   const result = await academicSemesterServices.createAcademicSemesterIntoDB(
@@ -27,7 +28,7 @@ const getAllAcademicSemesters = catchAsync(async (req, res) => {
 
 const getAnAcademicSemester = catchAsync(async (req, res) => {
   const result = await academicSemesterServices.getAnAcademicSemesterFromDB(
-    req.params.id,
+    new Types.ObjectId(req.params.id),
   );
   sendResponse(res, {
     statusCode: httpStatus.OK,

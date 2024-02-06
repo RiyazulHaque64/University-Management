@@ -1,5 +1,7 @@
-import { Schema, model } from 'mongoose';
-import { TFaculty, TUserName } from './faculty.interface';
+import httpStatus from 'http-status';
+import { Schema, Types, model } from 'mongoose';
+import AppError from '../../error/appError';
+import { TFaculty, TFacultyMethod, TUserName } from './faculty.interface';
 
 const facultyNameSchema = new Schema<TUserName>({
   firstName: {
@@ -17,7 +19,7 @@ const facultyNameSchema = new Schema<TUserName>({
   },
 });
 
-const facultySchema = new Schema<TFaculty>({
+const facultySchema = new Schema<TFaculty, TFacultyMethod>({
   id: {
     type: String,
     required: [true, 'Faculty ID is required!'],
@@ -70,7 +72,10 @@ const facultySchema = new Schema<TFaculty>({
     type: String,
     required: [true, 'Permanent address is required!'],
   },
-  profileImg: String,
+  profileImg: {
+    type: String,
+    default: '',
+  },
   academicDepartment: {
     type: Schema.Types.ObjectId,
     ref: 'AcademicDepartment',
@@ -81,6 +86,25 @@ const facultySchema = new Schema<TFaculty>({
   },
 });
 
-const FacultyModel = model<TFaculty>('Faculty', facultySchema);
+facultySchema.statics.isFacultyExists = async function (id: Types.ObjectId) {
+  const faculty = await Faculty.findOne({ _id: id, isDeleted: false }).populate(
+    'academicDepartment',
+  );
+  if (!faculty) {
+    throw new AppError(httpStatus.NOT_FOUND, "The faculty doesn't exists");
+  }
+  return faculty;
+};
 
-export default FacultyModel;
+facultySchema.pre('findOneAndUpdate', async function (next) {
+  const query = this.getQuery();
+  const isFacultyExists = await Faculty.findOne(query);
+  if (!isFacultyExists) {
+    throw new AppError(httpStatus.NOT_FOUND, "The faculty doesn't exists");
+  }
+  next();
+});
+
+const Faculty = model<TFaculty, TFacultyMethod>('Faculty', facultySchema);
+
+export default Faculty;

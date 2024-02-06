@@ -1,19 +1,19 @@
 import express from 'express';
-import { userCotroller } from './user.controller';
-import validateRequest from '../../middlewares/validateRequest';
-import { studentValidations } from '../student/student.validation';
-import { facultyValidations } from '../faculty/faculty.validation';
-import { adminValidations } from '../admin/admin.validation';
 import auth from '../../middlewares/auth';
-import { USER_ROLE } from './user.constant';
-import { userValidations } from './user.validation';
-import { upload } from '../../utils/sendImageToCloudinary';
 import parseDataFromBody from '../../middlewares/parseDataFromBody';
+import validateRequest from '../../middlewares/validateRequest';
+import { upload } from '../../utils/sendImageToCloudinary';
+import { adminValidations } from '../admin/admin.validation';
+import { facultyValidations } from '../faculty/faculty.validation';
+import { studentValidations } from '../student/student.validation';
+import { USER_ROLE } from './user.constant';
+import { userCotroller } from './user.controller';
+import { userValidations } from './user.validation';
 const router = express.Router();
 
 router.post(
   '/create-student',
-  auth(USER_ROLE.admin),
+  auth(USER_ROLE.superAdmin, USER_ROLE.admin),
   upload.single('file'),
   parseDataFromBody,
   validateRequest(studentValidations.createStudentValidationSchema),
@@ -22,13 +22,18 @@ router.post(
 
 router.post(
   '/create-faculty',
-  auth(USER_ROLE.admin),
+  auth(USER_ROLE.superAdmin, USER_ROLE.admin),
+  upload.single('file'),
+  parseDataFromBody,
   validateRequest(facultyValidations.createFacultyValidationSchema),
   userCotroller.createFaculty,
 );
 
 router.post(
   '/create-admin',
+  auth(USER_ROLE.superAdmin),
+  upload.single('file'),
+  parseDataFromBody,
   validateRequest(adminValidations.createAdminValidationSchema),
   userCotroller.createAdmin,
 );

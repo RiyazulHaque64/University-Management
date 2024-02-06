@@ -1,10 +1,15 @@
-import { Schema, model } from 'mongoose';
-import { TAcademicDepartment } from './academicDepartment.interface';
-import AcademicFacultyModel from '../academicFaculty/academicFaculty.model';
-import AppError from '../../error/appError';
 import httpStatus from 'http-status';
+import { Schema, Types, model } from 'mongoose';
+import AppError from '../../error/appError';
+import {
+  TAcademicDepartment,
+  TAcademicDepartmentMethod,
+} from './academicDepartment.interface';
 
-const academicDepartmentSchema = new Schema<TAcademicDepartment>(
+const academicDepartmentSchema = new Schema<
+  TAcademicDepartment,
+  TAcademicDepartmentMethod
+>(
   {
     name: {
       type: String,
@@ -22,41 +27,29 @@ const academicDepartmentSchema = new Schema<TAcademicDepartment>(
   },
 );
 
-academicDepartmentSchema.pre('save', async function (next) {
-  const isDepartmentExists = await AcademicDepartmentModel.findOne({
-    name: this.name,
-  });
-  if (isDepartmentExists) {
-    throw new AppError(
-      httpStatus.BAD_REQUEST,
-      'This department is already exists!',
-    );
+academicDepartmentSchema.statics.isAcademicDepartmentExists = async function (
+  id: Types.ObjectId,
+) {
+  const academicDepartment =
+    await AcademicDepartment.findById(id).populate('academicFaculty');
+  if (!academicDepartment) {
+    throw new AppError(httpStatus.NOT_FOUND, 'The department does not exists!');
   }
-  next();
-});
+  return academicDepartment;
+};
 
 academicDepartmentSchema.pre('findOneAndUpdate', async function (next) {
   const query = this.getQuery();
-  const isDepartmentExists = await AcademicDepartmentModel.findOne(query);
+  const isDepartmentExists = await AcademicDepartment.findOne(query);
   if (!isDepartmentExists) {
     throw new AppError(httpStatus.NOT_FOUND, 'The department does not exists!');
   }
   next();
 });
 
-academicDepartmentSchema.pre('save', async function (next) {
-  const isFacultyExists = await AcademicFacultyModel.findOne({
-    _id: this.academicFaculty,
-  });
-  if (!isFacultyExists) {
-    throw new Error('The faculty does not exists!');
-  }
-  next();
-});
+const AcademicDepartment = model<
+  TAcademicDepartment,
+  TAcademicDepartmentMethod
+>('AcademicDepartment', academicDepartmentSchema);
 
-const AcademicDepartmentModel = model<TAcademicDepartment>(
-  'AcademicDepartment',
-  academicDepartmentSchema,
-);
-
-export default AcademicDepartmentModel;
+export default AcademicDepartment;

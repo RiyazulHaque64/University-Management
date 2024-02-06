@@ -1,14 +1,15 @@
 import httpStatus from 'http-status';
+import { Types } from 'mongoose';
+import QueryBuilder from '../../builder/QueryBuilder';
 import AppError from '../../error/appError';
 import AcademicSemesterModel from '../academicSemester/academicSemester.model';
-import { TSemesterRegistration } from './semesterRegistration.interface';
-import SemesterRegistrationModel from './semesterRegistration.model';
-import QueryBuilder from '../../builder/QueryBuilder';
 import { semesterRegistrationStatus } from './semesterRegistration.const';
+import { TSemesterRegistration } from './semesterRegistration.interface';
+import SemesterRegistration from './semesterRegistration.model';
 
 const semesterRegistrationIntoDB = async (payload: TSemesterRegistration) => {
   const academicSemester = payload?.academicSemester;
-  const checkRegistered = await SemesterRegistrationModel.findOne({
+  const checkRegistered = await SemesterRegistration.findOne({
     academicSemester,
   });
   if (checkRegistered) {
@@ -26,7 +27,7 @@ const semesterRegistrationIntoDB = async (payload: TSemesterRegistration) => {
     );
   }
   const isThereAnyUpcomingOrOngoingSemester =
-    await SemesterRegistrationModel.findOne({
+    await SemesterRegistration.findOne({
       $or: [
         {
           status: semesterRegistrationStatus.ONGOING,
@@ -42,7 +43,7 @@ const semesterRegistrationIntoDB = async (payload: TSemesterRegistration) => {
       `There is already an ${isThereAnyUpcomingOrOngoingSemester.status} registered semister`,
     );
   }
-  const result = await SemesterRegistrationModel.create(payload);
+  const result = await SemesterRegistration.create(payload);
   return result;
 };
 
@@ -50,7 +51,7 @@ const getAllRegisteredSemesterFromDB = async (
   query: Record<string, unknown>,
 ) => {
   const semesterRegistrationQuery = new QueryBuilder(
-    SemesterRegistrationModel.find(),
+    SemesterRegistration.find().populate('academicSemester'),
     query,
   )
     .filter()
@@ -61,8 +62,8 @@ const getAllRegisteredSemesterFromDB = async (
   return result;
 };
 
-const getSingleRegisteredSemesterFromDB = async (id: string) => {
-  const result = await SemesterRegistrationModel.findById(id);
+const getSingleRegisteredSemesterFromDB = async (id: Types.ObjectId) => {
+  const result = await SemesterRegistration.isSemesterRegistrationExists(id);
   return result;
 };
 
@@ -70,8 +71,7 @@ const updateRegisteredSemesterIntoDB = async (
   id: string,
   payload: TSemesterRegistration,
 ) => {
-  const isSemesterRegistrationExists =
-    await SemesterRegistrationModel.findById(id);
+  const isSemesterRegistrationExists = await SemesterRegistration.findById(id);
   const currentSemesterStatus = isSemesterRegistrationExists?.status;
   const requestedStatus = payload?.status;
   if (!isSemesterRegistrationExists) {
@@ -104,11 +104,10 @@ const updateRegisteredSemesterIntoDB = async (
       `You cann't change ${currentSemesterStatus} to ${requestedStatus}`,
     );
   }
-  const result = await SemesterRegistrationModel.findByIdAndUpdate(
-    id,
-    payload,
-    { new: true, runValidators: true },
-  );
+  const result = await SemesterRegistration.findByIdAndUpdate(id, payload, {
+    new: true,
+    runValidators: true,
+  }).populate('academicSemester');
   return result;
 };
 

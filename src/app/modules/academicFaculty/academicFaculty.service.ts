@@ -1,18 +1,19 @@
+import { Types } from 'mongoose';
 import { TAcademicFaculty } from './academicFaculty.interface';
-import AcademicFacultyModel from './academicFaculty.model';
+import AcademicFaculty from './academicFaculty.model';
 
 const createAcademicFacultyIntoDB = async (payload: TAcademicFaculty) => {
-  const result = await AcademicFacultyModel.create(payload);
+  const result = await AcademicFaculty.create(payload);
   return result;
 };
 
 const getAllAcademicFacultiesFromDB = async () => {
-  const result = await AcademicFacultyModel.find();
+  const result = await AcademicFaculty.find();
   return result;
 };
 
-const getAnAcademicFacultyFromDB = async (id: string) => {
-  const result = await AcademicFacultyModel.findById(id);
+const getAnAcademicFacultyFromDB = async (id: Types.ObjectId) => {
+  const result = await AcademicFaculty.isAcademicFacultyExists(id);
   return result;
 };
 
@@ -20,11 +21,9 @@ const updateAnAcademicFacultyIntoDB = async (
   id: string,
   payload: TAcademicFaculty,
 ) => {
-  const result = await AcademicFacultyModel.findOneAndUpdate(
-    { _id: id },
-    payload,
-    { new: true },
-  );
+  const result = await AcademicFaculty.findOneAndUpdate({ _id: id }, payload, {
+    new: true,
+  });
   return result;
 };
 

@@ -1,4 +1,4 @@
-import { Types } from 'mongoose';
+import { Model, Types } from 'mongoose';
 
 export interface TSemesterRegistration {
   academicSemester: Types.ObjectId;
@@ -7,4 +7,12 @@ export interface TSemesterRegistration {
   endDate: Date;
   minCredit: number;
   maxCredit: number;
+}
+
+export interface TSemesterRegistrationMethod
+  extends Model<TSemesterRegistration> {
+  isSemesterRegistrationExists(
+    // eslint-disable-next-line no-unused-vars
+    id: Types.ObjectId,
+  ): Promise<TSemesterRegistration | null>;
 }

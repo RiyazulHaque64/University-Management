@@ -1,12 +1,20 @@
-import { Schema, model } from 'mongoose';
-import { TAcademicSemester } from './academicSemester.interface';
+import httpStatus from 'http-status';
+import { Schema, Types, model } from 'mongoose';
+import AppError from '../../error/appError';
 import {
   AcademicSemesterCode,
   AcademicSemesterName,
   Months,
 } from './academicSemester.constant';
+import {
+  TAcademicSemester,
+  TAcademicSemesterMethod,
+} from './academicSemester.interface';
 
-const academicSemesterSchema = new Schema<TAcademicSemester>(
+const academicSemesterSchema = new Schema<
+  TAcademicSemester,
+  TAcademicSemesterMethod
+>(
   {
     name: {
       type: String,
@@ -37,7 +45,7 @@ const academicSemesterSchema = new Schema<TAcademicSemester>(
 );
 
 academicSemesterSchema.pre('save', async function (next) {
-  const isSemesterExists = await AcademicSemesterModel.findOne({
+  const isSemesterExists = await AcademicSemester.findOne({
     name: this.name,
     year: this.year,
   });
@@ -48,8 +56,21 @@ academicSemesterSchema.pre('save', async function (next) {
   }
 });
 
-const AcademicSemesterModel = model<TAcademicSemester>(
+academicSemesterSchema.statics.isAcademicSemesterExists = async function (
+  id: Types.ObjectId,
+) {
+  const academicSemester = await AcademicSemester.findById(id);
+  if (!academicSemester) {
+    throw new AppError(
+      httpStatus.NOT_FOUND,
+      "Academic semester doesn't exists",
+    );
+  }
+  return academicSemester;
+};
+
+const AcademicSemester = model<TAcademicSemester, TAcademicSemesterMethod>(
   'AcademicSemester',
   academicSemesterSchema,
 );
-export default AcademicSemesterModel;
+export default AcademicSemester;

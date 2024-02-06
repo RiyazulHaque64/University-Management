@@ -1,18 +1,18 @@
+import httpStatus from 'http-status';
 import mongoose from 'mongoose';
 import config from '../../config';
+import AppError from '../../error/appError';
+import { sendImageToCloudinary } from '../../utils/sendImageToCloudinary';
+import AcademicDepartmentModel from '../academicDepartment/academicDepartment.model';
 import AcademicSemesterModel from '../academicSemester/academicSemester.model';
+import AdminModel from '../admin/admin.model';
+import { TFaculty } from '../faculty/faculty.interface';
+import FacultyModel from '../faculty/faculty.model';
 import { TStudent } from '../student/student.interface';
 import { StudentModel } from '../student/student.model';
 import { TUser } from './user.interface';
 import { UserModel } from './user.model';
 import { facultyAndAdminIdGenerator, studentIdGenerator } from './user.utils';
-import AppError from '../../error/appError';
-import httpStatus from 'http-status';
-import { TFaculty } from '../faculty/faculty.interface';
-import AcademicDepartmentModel from '../academicDepartment/academicDepartment.model';
-import FacultyModel from '../faculty/faculty.model';
-import AdminModel from '../admin/admin.model';
-import { sendImageToCloudinary } from '../../utils/sendImageToCloudinary';
 
 const createStudentIntoDB = async (
   password: string,
@@ -37,16 +37,16 @@ const createStudentIntoDB = async (
       'Selected admission semester has not exists!',
     );
   }
-  const imageName = payload?.name?.firstName + '-' + userData.id;
+
   const session = await mongoose.startSession();
 
   try {
     session.startTransaction();
-    const { secure_url } = (await sendImageToCloudinary(
-      imageName,
-      filePath,
-    )) as Record<string, unknown>;
-    payload.profileImg = secure_url as string;
+    if (filePath) {
+      const imageName = payload?.name?.firstName + '-' + userData.id;
+      const { secure_url } = await sendImageToCloudinary(imageName, filePath);
+      payload.profileImg = secure_url as string;
+    }
     const newUser = await UserModel.create([userData], { session });
     if (!newUser.length) {
       throw new AppError(httpStatus.BAD_REQUEST, 'Failed to create user!');
@@ -73,7 +73,11 @@ const createStudentIntoDB = async (
   }
 };
 
-const createFacultyIntoDB = async (password: string, payload: TFaculty) => {
+const createFacultyIntoDB = async (
+  password: string,
+  payload: TFaculty,
+  filePath: string,
+) => {
   const userData: Partial<TUser> = {};
   userData.id = await facultyAndAdminIdGenerator('faculty');
   userData.password = password || config.default_password;
@@ -83,12 +87,16 @@ const createFacultyIntoDB = async (password: string, payload: TFaculty) => {
   const checkAcademicDepartment = await AcademicDepartmentModel.findById(
     payload?.academicDepartment,
   );
-
   if (checkAcademicDepartment) {
     const session = await mongoose.startSession();
 
     try {
       session.startTransaction();
+      if (filePath) {
+        const imageName = payload?.name?.firstName + '-' + userData.id;
+        const { secure_url } = await sendImageToCloudinary(imageName, filePath);
+        payload.profileImg = secure_url as string;
+      }
       const newUser = await UserModel.create([userData], { session });
       if (!newUser.length) {
         throw new AppError(httpStatus.BAD_REQUEST, 'Failed to create user!');
@@ -119,7 +127,11 @@ const createFacultyIntoDB = async (password: string, payload: TFaculty) => {
   }
 };
 
-const createAdminIntoDB = async (password: string, payload: TFaculty) => {
+const createAdminIntoDB = async (
+  password: string,
+  payload: TFaculty,
+  filePath: string,
+) => {
   const userData: Partial<TUser> = {};
   userData.id = await facultyAndAdminIdGenerator('admin');
   userData.password = password || config.default_password;
@@ -130,6 +142,11 @@ const createAdminIntoDB = async (password: string, payload: TFaculty) => {
 
   try {
     session.startTransaction();
+    if (filePath) {
+      const imageName = payload?.name?.firstName + '-' + userData.id;
+      const { secure_url } = await sendImageToCloudinary(imageName, filePath);
+      payload.profileImg = secure_url as string;
+    }
     const newUser = await UserModel.create([userData], { session });
     if (!newUser.length) {
       throw new AppError(httpStatus.BAD_REQUEST, 'Failed to create user!');

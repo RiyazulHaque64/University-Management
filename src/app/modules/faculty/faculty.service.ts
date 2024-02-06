@@ -1,10 +1,10 @@
-import mongoose from 'mongoose';
-import QueryBuilder from '../../builder/QueryBuilder';
-import { TFaculty } from './faculty.interface';
-import FacultyModel from './faculty.model';
-import AppError from '../../error/appError';
 import httpStatus from 'http-status';
+import mongoose, { Types } from 'mongoose';
+import QueryBuilder from '../../builder/QueryBuilder';
+import AppError from '../../error/appError';
 import { UserModel } from '../user/user.model';
+import { TFaculty } from './faculty.interface';
+import Faculty from './faculty.model';
 
 const getAllFacultiesFromDB = async (query: Record<string, unknown>) => {
   const searchableField = [
@@ -16,7 +16,7 @@ const getAllFacultiesFromDB = async (query: Record<string, unknown>) => {
     'name.middleName',
   ];
   const facultyQuery = new QueryBuilder(
-    FacultyModel.find({ isDeleted: false }).populate('academicDepartment'),
+    Faculty.find({ isDeleted: false }).populate('academicDepartment'),
     query,
   )
     .search(searchableField)
@@ -29,11 +29,8 @@ const getAllFacultiesFromDB = async (query: Record<string, unknown>) => {
   return result;
 };
 
-const getFacultyFromDB = async (id: string) => {
-  const result = await FacultyModel.findOne({
-    _id: id,
-    isDeleted: false,
-  }).populate('academicDepartment');
+const getFacultyFromDB = async (id: Types.ObjectId) => {
+  const result = await Faculty.isFacultyExists(id);
   return result;
 };
 
@@ -45,7 +42,7 @@ const updateFacultyIntoDB = async (id: string, payload: TFaculty) => {
       updateData[`name.${key}`] = value;
     }
   }
-  const result = await FacultyModel.findByIdAndUpdate(id, updateData, {
+  const result = await Faculty.findByIdAndUpdate(id, updateData, {
     new: true,
     runValidators: true,
   });
@@ -56,7 +53,7 @@ const deleteFacultyFromDB = async (id: string) => {
   const session = await mongoose.startSession();
   try {
     session.startTransaction();
-    const deletedFaculty = await FacultyModel.findByIdAndUpdate(
+    const deletedFaculty = await Faculty.findByIdAndUpdate(
       id,
       { isDeleted: true },
       { new: true, session },

@@ -1,19 +1,19 @@
 import httpStatus from 'http-status';
-import mongoose from 'mongoose';
+import mongoose, { Types } from 'mongoose';
 import QueryBuilder from '../../builder/QueryBuilder';
 import AppError from '../../error/appError';
 import { TCourse, TCourseFaculties } from './course.interface';
-import CourseModel, { CourseFacultiesModel } from './course.model';
+import Course, { CourseFaculties } from './course.model';
 
 const createCourseIntoDB = async (payload: TCourse) => {
-  const result = await CourseModel.create(payload);
+  const result = await Course.create(payload);
   return result;
 };
 
 const getAllCoursesFromDB = async (query: Record<string, unknown>) => {
   const searchableField = ['title', 'prefix', 'code'];
   const courseQuery = new QueryBuilder(
-    CourseModel.find().populate('preRequisiteCourses.course'),
+    Course.find({ isDeleted: false }).populate('preRequisiteCourses.course'),
     query,
   )
     .search(searchableField)
@@ -27,10 +27,8 @@ const getAllCoursesFromDB = async (query: Record<string, unknown>) => {
   return result;
 };
 
-const getCourseFromDB = async (id: string) => {
-  const result = await CourseModel.findOne({
-    _id: id,
-  }).populate('preRequisiteCourses.course');
+const getCourseFromDB = async (id: Types.ObjectId) => {
+  const result = await Course.isCourseExists(id);
   return result;
 };
 
@@ -39,7 +37,7 @@ const updateCourseIntoDB = async (id: string, payload: TCourse) => {
   const session = await mongoose.startSession();
   try {
     session.startTransaction();
-    const basicUpdatedCourse = await CourseModel.findByIdAndUpdate(
+    const basicUpdatedCourse = await Course.findByIdAndUpdate(
       id,
       remainingData,
       {
@@ -55,7 +53,7 @@ const updateCourseIntoDB = async (id: string, payload: TCourse) => {
       const deletedPreRequisite = preRequisiteCourses
         .filter((course) => course?.course && course?.isDeleted)
         .map((el) => el?.course);
-      const deletedPreRequisiteCourses = await CourseModel.findByIdAndUpdate(
+      const deletedPreRequisiteCourses = await Course.findByIdAndUpdate(
         id,
         {
           $pull: {
@@ -70,7 +68,7 @@ const updateCourseIntoDB = async (id: string, payload: TCourse) => {
       const newPreRequisite = preRequisiteCourses.filter(
         (course) => course?.course && !course.isDeleted,
       );
-      const addedPreRequisiteCourses = await CourseModel.findByIdAndUpdate(
+      const addedPreRequisiteCourses = await Course.findByIdAndUpdate(
         id,
         {
           $addToSet: { preRequisiteCourses: { $each: newPreRequisite } },
@@ -83,7 +81,7 @@ const updateCourseIntoDB = async (id: string, payload: TCourse) => {
     }
     await session.commitTransaction();
     await session.endSession();
-    const result = await CourseModel.findById(id).populate(
+    const result = await Course.findById(id).populate(
       'preRequisiteCourses.course',
     );
     return result;
@@ -95,7 +93,7 @@ const updateCourseIntoDB = async (id: string, payload: TCourse) => {
 };
 
 const deleteCourseFromDB = async (id: string) => {
-  const result = await CourseModel.findByIdAndUpdate(
+  const result = await Course.findByIdAndUpdate(
     id,
     { isDeleted: true },
     { new: true },
@@ -104,38 +102,46 @@ const deleteCourseFromDB = async (id: string) => {
 };
 
 const assingFacultiesWithCourseIntoDB = async (
-  id: string,
+  id: Types.ObjectId,
   payload: TCourseFaculties,
 ) => {
-  const result = await CourseFacultiesModel.findByIdAndUpdate(
+  const isCourseExists = await Course.isCourseExists(id);
+  if (!isCourseExists) {
+    throw new AppError(httpStatus.NOT_FOUND, "The course doesn't exists");
+  }
+  const result = await CourseFaculties.findByIdAndUpdate(
     id,
     {
       course: id,
       $addToSet: { faculties: { $each: payload.faculties } },
     },
     { upsert: true, new: true },
-  );
+  ).populate('faculties');
   return result;
 };
 
 const getFacultiesWithCourseFromDB = async (id: string) => {
-  const result = await CourseFacultiesModel.findOne({ course: id }).populate(
+  const result = await CourseFaculties.findOne({ course: id }).populate(
     'faculties',
   );
   return result;
 };
 
 const removeFacultiesFromCourseIntoDB = async (
-  id: string,
+  id: Types.ObjectId,
   payload: TCourseFaculties,
 ) => {
-  const result = await CourseFacultiesModel.findByIdAndUpdate(
+  const isCourseExists = await Course.isCourseExists(id);
+  if (!isCourseExists) {
+    throw new AppError(httpStatus.NOT_FOUND, "The course doesn't exists");
+  }
+  const result = await CourseFaculties.findByIdAndUpdate(
     id,
     {
       $pull: { faculties: { $in: payload.faculties } },
     },
     { new: true },
-  );
+  ).populate('faculties');
   return result;
 };
 
