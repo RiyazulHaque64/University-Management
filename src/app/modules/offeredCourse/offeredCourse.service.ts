@@ -1,18 +1,20 @@
 import httpStatus from 'http-status';
 import AppError from '../../error/appError';
-import SemesterRegistrationModel from '../semesterRegistration/semesterRegistration.model';
+import { TAcademicDepartment } from '../academicDepartment/academicDepartment.interface';
+import AcademicDepartment from '../academicDepartment/academicDepartment.model';
+import Course from '../course/course.model';
+import {
+  default as Faculty,
+  default as FacultyModel,
+} from '../faculty/faculty.model';
+import SemesterRegistration from '../semesterRegistration/semesterRegistration.model';
 import { TOfferedCourse } from './offeredCourse.interface';
-import OfferedCourseModel from './offeredCourse.model';
-import AcademicFacultyModel from '../academicFaculty/academicFaculty.model';
-import AcademicDepartmentModel from '../academicDepartment/academicDepartment.model';
-import CourseModel from '../course/course.model';
-import FacultyModel from '../faculty/faculty.model';
+import OfferedCourse from './offeredCourse.model';
 import { hashTimeConflict } from './offeredCourse.utils';
 
 const createOfferedCourseIntoDB = async (payload: TOfferedCourse) => {
   const {
     semesterRegistration,
-    academicFaculty,
     academicDepartment,
     course,
     faculty,
@@ -22,28 +24,22 @@ const createOfferedCourseIntoDB = async (payload: TOfferedCourse) => {
     endTime,
   } = payload;
   const isSemesterRegistrationExits =
-    await SemesterRegistrationModel.findById(semesterRegistration);
+    await SemesterRegistration.findById(semesterRegistration);
   if (!isSemesterRegistrationExits) {
     throw new AppError(
       httpStatus.NOT_FOUND,
       'Semester registration is not found!',
     );
   }
-  const academicSemester = isSemesterRegistrationExits.academicSemester;
-  const isAcademicFacultyExits =
-    await AcademicFacultyModel.findById(academicFaculty);
-  if (!isAcademicFacultyExits) {
-    throw new AppError(httpStatus.NOT_FOUND, 'Academic faculty is not found!');
-  }
   const isAcademicDepartmentExits =
-    await AcademicDepartmentModel.findById(academicDepartment);
+    await AcademicDepartment.findById(academicDepartment);
   if (!isAcademicDepartmentExits) {
     throw new AppError(
       httpStatus.NOT_FOUND,
       'Academic department is not found!',
     );
   }
-  const isCourseExits = await CourseModel.findById(course);
+  const isCourseExits = await Course.findById(course);
   if (!isCourseExits) {
     throw new AppError(httpStatus.NOT_FOUND, 'Course is not found!');
   }
@@ -51,18 +47,18 @@ const createOfferedCourseIntoDB = async (payload: TOfferedCourse) => {
   if (!isFacultyExits) {
     throw new AppError(httpStatus.NOT_FOUND, 'Faculty is not found!');
   }
-  const isDepartmentBelongToFaculty = await AcademicDepartmentModel.findOne({
-    academicFaculty,
-    _id: academicDepartment,
+  const isDepartmentBelongToFaculty = await Faculty.findOne({
+    _id: isFacultyExits._id,
+    academicDepartment: isAcademicDepartmentExits._id,
   });
   if (!isDepartmentBelongToFaculty) {
     throw new AppError(
       httpStatus.NOT_FOUND,
-      `${isAcademicDepartmentExits?.name} is not belong to ${isAcademicFacultyExits?.name}`,
+      `${isAcademicDepartmentExits?.name} is not belong to Mr. ${isFacultyExits?.name?.firstName}`,
     );
   }
   const iSameOfferedCourseExistsWithSameRegisteredSemisterWithSameSection =
-    await OfferedCourseModel.findOne({
+    await OfferedCourse.findOne({
       semesterRegistration,
       course,
       section,
@@ -73,7 +69,7 @@ const createOfferedCourseIntoDB = async (payload: TOfferedCourse) => {
       `Offered course with same section is already exists!`,
     );
   }
-  const assignedShedules = await OfferedCourseModel.find({
+  const assignedShedules = await OfferedCourse.find({
     semesterRegistration,
     faculty,
     days: { $in: days },
@@ -89,10 +85,9 @@ const createOfferedCourseIntoDB = async (payload: TOfferedCourse) => {
       `${isFacultyExits?.name?.firstName} is not available at that time or day`,
     );
   }
-  const result = await OfferedCourseModel.create({
-    ...payload,
-    academicSemester,
-  });
+  payload.academicSemester = isSemesterRegistrationExits.academicSemester;
+  payload.academicFaculty = isAcademicDepartmentExits.academicFaculty;
+  const result = await OfferedCourse.create(payload);
   return result;
 };
 
@@ -101,13 +96,14 @@ const updateOfferedCourseIntoDB = async (
   payload: Pick<TOfferedCourse, 'faculty' | 'days' | 'startTime' | 'endTime'>,
 ) => {
   const { faculty, days, startTime, endTime } = payload;
-  const isOfferedCourseExists = await OfferedCourseModel.findById(id);
+  const isOfferedCourseExists =
+    await OfferedCourse.findById(id).populate('academicDepartment');
   if (!isOfferedCourseExists) {
     throw new AppError(httpStatus.NOT_FOUND, 'Offered course is not found!');
   }
   const semesterRegistration = isOfferedCourseExists.semesterRegistration;
   const isSemesterRegistrationExists =
-    await SemesterRegistrationModel.findById(semesterRegistration);
+    await SemesterRegistration.findById(semesterRegistration);
   if (isSemesterRegistrationExists?.status !== 'UPCOMING') {
     throw new AppError(
       httpStatus.NOT_FOUND,
@@ -118,7 +114,19 @@ const updateOfferedCourseIntoDB = async (
   if (!isFacultyExits) {
     throw new AppError(httpStatus.NOT_FOUND, 'Faculty is not found!');
   }
-  const assignedShedules = await OfferedCourseModel.find({
+  const isDepartmentBelongToFaculty = await Faculty.findOne({
+    _id: isFacultyExits._id,
+    academicDepartment: isOfferedCourseExists.academicDepartment,
+  });
+  if (!isDepartmentBelongToFaculty) {
+    const academicDepartment =
+      isOfferedCourseExists.academicDepartment as unknown as TAcademicDepartment;
+    throw new AppError(
+      httpStatus.NOT_FOUND,
+      `${academicDepartment?.name} is not belong to Mr. ${isFacultyExits?.name?.firstName}`,
+    );
+  }
+  const assignedShedules = await OfferedCourse.find({
     semesterRegistration,
     faculty,
     days: { $in: days },
@@ -134,7 +142,7 @@ const updateOfferedCourseIntoDB = async (
       `${isFacultyExits?.name?.firstName} is not available at that time or day`,
     );
   }
-  const result = await OfferedCourseModel.findByIdAndUpdate(id, payload, {
+  const result = await OfferedCourse.findByIdAndUpdate(id, payload, {
     new: true,
     runValidators: true,
   });

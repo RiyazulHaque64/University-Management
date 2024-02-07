@@ -1,6 +1,6 @@
 import { Schema, model } from 'mongoose';
-import { TOfferedCourse } from './offeredCourse.interface';
 import { Days } from './offeredCourse.const';
+import { TOfferedCourse } from './offeredCourse.interface';
 
 const offeredCourseSchema = new Schema<TOfferedCourse>({
   semesterRegistration: {
@@ -57,8 +57,8 @@ const offeredCourseSchema = new Schema<TOfferedCourse>({
   },
 });
 
-const OfferedCourseModel = model<TOfferedCourse>(
+const OfferedCourse = model<TOfferedCourse>(
   'OfferedCourse',
   offeredCourseSchema,
 );
-export default OfferedCourseModel;
+export default OfferedCourse;

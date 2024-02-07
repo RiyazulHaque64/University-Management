@@ -10,10 +10,9 @@ const timeValidationSchema = z.string().refine(
 );
 
 const createOfferedCourseValidationSchema = z.object({
-  offeredCourse: z
+  body: z
     .object({
       semesterRegistration: z.string(),
-      academicFaculty: z.string(),
       academicDepartment: z.string(),
       course: z.string(),
       faculty: z.string(),
@@ -34,7 +33,7 @@ const createOfferedCourseValidationSchema = z.object({
 });
 
 const updateOfferedCourseValidationSchema = z.object({
-  offeredCourse: z
+  body: z
     .object({
       faculty: z.string(),
       maxCapacity: z.number(),
