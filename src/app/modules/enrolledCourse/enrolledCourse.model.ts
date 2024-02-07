@@ -2,10 +2,10 @@ import { Schema, model } from 'mongoose';
 import { TEnrolledCourse } from './enrolledCourse.interface';
 
 const courseMarksSchema = new Schema({
-  classTest1: { type: Number, required: true, default: 0 },
-  midTerm: { type: Number, required: true, default: 0 },
-  classTest2: { type: Number, required: true, default: 0 },
-  finalTerm: { type: Number, required: true, default: 0 },
+  classTest1: { type: Number, required: true, min: 0, max: 10, default: 0 },
+  midTerm: { type: Number, required: true, min: 0, max: 30, default: 0 },
+  classTest2: { type: Number, required: true, min: 0, max: 10, default: 0 },
+  finalTerm: { type: Number, required: true, min: 0, max: 50, default: 0 },
 });
 
 const enrolledCourseSchema = new Schema<TEnrolledCourse>({
