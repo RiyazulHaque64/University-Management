@@ -4,9 +4,9 @@ import AppError from '../../error/appError';
 import CourseModel from '../course/course.model';
 import OfferedCourseModel from '../offeredCourse/offeredCourse.model';
 import SemesterRegistrationModel from '../semesterRegistration/semesterRegistration.model';
-import { StudentModel } from '../student/student.model';
+import Student from '../student/student.model';
 import { TEnrolledCourse } from './enrolledCourse.interface';
-import EnrolledCourseModel from './enrolledCourse.model';
+import EnrolledCourse from './enrolledCourse.model';
 
 const enrolledCourseIntoDB = async (id: string, payload: TEnrolledCourse) => {
   const isOfferedCourseExists = await OfferedCourseModel.findById(
@@ -16,11 +16,11 @@ const enrolledCourseIntoDB = async (id: string, payload: TEnrolledCourse) => {
     throw new AppError(httpStatus.NOT_FOUND, 'Offered course is not found!');
   }
   const course = await CourseModel.findById(isOfferedCourseExists.course);
-  const student = await StudentModel.findOne({ id }).select('_id');
+  const student = await Student.findOne({ id }).select('_id');
   if (!student) {
     throw new AppError(httpStatus.NOT_FOUND, 'Student is not found!');
   }
-  const isStudentAlreadyEnrolled = await EnrolledCourseModel.findOne({
+  const isStudentAlreadyEnrolled = await EnrolledCourse.findOne({
     semesterRegistration: isOfferedCourseExists?.semesterRegistration,
     course: payload?.offeredCourse,
     student: student?._id,
@@ -38,7 +38,7 @@ const enrolledCourseIntoDB = async (id: string, payload: TEnrolledCourse) => {
     isOfferedCourseExists.semesterRegistration,
   ).select('maxCredit');
 
-  const enrolledCourses = await EnrolledCourseModel.aggregate([
+  const enrolledCourses = await EnrolledCourse.aggregate([
     {
       $match: {
         semesterRegistration: isOfferedCourseExists.semesterRegistration,
@@ -85,7 +85,7 @@ const enrolledCourseIntoDB = async (id: string, payload: TEnrolledCourse) => {
   const session = await mongoose.startSession();
   try {
     session.startTransaction();
-    const result = await EnrolledCourseModel.create(
+    const result = await EnrolledCourse.create(
       [
         {
           semesterRegistration: isOfferedCourseExists?.semesterRegistration,

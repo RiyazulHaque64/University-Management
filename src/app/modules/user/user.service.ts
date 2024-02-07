@@ -3,13 +3,13 @@ import mongoose from 'mongoose';
 import config from '../../config';
 import AppError from '../../error/appError';
 import { sendImageToCloudinary } from '../../utils/sendImageToCloudinary';
-import AcademicDepartmentModel from '../academicDepartment/academicDepartment.model';
-import AcademicSemesterModel from '../academicSemester/academicSemester.model';
+import AcademicDepartment from '../academicDepartment/academicDepartment.model';
+import AcademicSemester from '../academicSemester/academicSemester.model';
 import AdminModel from '../admin/admin.model';
 import { TFaculty } from '../faculty/faculty.interface';
 import FacultyModel from '../faculty/faculty.model';
 import { TStudent } from '../student/student.interface';
-import { StudentModel } from '../student/student.model';
+import Student from '../student/student.model';
 import { TUser } from './user.interface';
 import { UserModel } from './user.model';
 import { facultyAndAdminIdGenerator, studentIdGenerator } from './user.utils';
@@ -19,7 +19,16 @@ const createStudentIntoDB = async (
   payload: TStudent,
   filePath: string,
 ) => {
-  const admissionSemester = await AcademicSemesterModel.findById(
+  const academicDepartment = await AcademicDepartment.findById(
+    payload.academicDepartment,
+  );
+  if (!academicDepartment) {
+    throw new AppError(
+      httpStatus.NOT_FOUND,
+      "Academic department doesn't exists",
+    );
+  }
+  const admissionSemester = await AcademicSemester.findById(
     payload.admissionSemester,
   );
 
@@ -54,8 +63,9 @@ const createStudentIntoDB = async (
 
     payload.id = newUser[0].id;
     payload.user = newUser[0]._id;
+    payload.academicFaculty = academicDepartment.academicFaculty;
 
-    const newStudent = await StudentModel.create([payload], { session });
+    const newStudent = await Student.create([payload], { session });
     if (!newStudent.length) {
       throw new AppError(httpStatus.BAD_REQUEST, 'Failed to create student!');
     }
@@ -84,7 +94,7 @@ const createFacultyIntoDB = async (
   userData.role = 'faculty';
   userData.email = payload?.email;
 
-  const checkAcademicDepartment = await AcademicDepartmentModel.findById(
+  const checkAcademicDepartment = await AcademicDepartment.findById(
     payload?.academicDepartment,
   );
   if (checkAcademicDepartment) {
@@ -174,7 +184,7 @@ const createAdminIntoDB = async (
 const getMeFromDB = async (userId: string, role: string) => {
   let result = null;
   if (role === 'student') {
-    result = await StudentModel.findOne({ id: userId }).populate('user');
+    result = await Student.findOne({ id: userId }).populate('user');
   }
   if (role === 'faculty') {
     result = await FacultyModel.findOne({ id: userId }).populate('user');

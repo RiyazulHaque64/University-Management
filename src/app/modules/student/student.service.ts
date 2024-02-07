@@ -1,15 +1,15 @@
-import mongoose from 'mongoose';
-import { StudentModel } from './student.model';
-import AppError from '../../error/appError';
 import httpStatus from 'http-status';
+import mongoose from 'mongoose';
+import QueryBuilder from '../../builder/QueryBuilder';
+import AppError from '../../error/appError';
 import { UserModel } from '../user/user.model';
 import { TStudent } from './student.interface';
-import QueryBuilder from '../../builder/QueryBuilder';
+import Student from './student.model';
 
 export const getAllStudentsFromDB = async (query: Record<string, unknown>) => {
   const studentSearchableField = ['email', 'name.firstName', 'presentAddress'];
   const studentQuery = new QueryBuilder(
-    StudentModel.find().populate('user').populate('admissionSemester'),
+    Student.find().populate('user').populate('admissionSemester'),
     query,
   )
     .search(studentSearchableField)
@@ -22,7 +22,7 @@ export const getAllStudentsFromDB = async (query: Record<string, unknown>) => {
 };
 
 export const getSingleStudentFromDB = async (id: string) => {
-  const result = await StudentModel.findOne({ id })
+  const result = await Student.findOne({ id })
     .populate('user')
     .populate('admissionSemester');
   return result;
@@ -49,14 +49,10 @@ export const updateStudentIntoDB = async (
       modifiedUpdatedData[`localGuardian.${key}`] = value;
     }
   }
-  const result = await StudentModel.findOneAndUpdate(
-    { id },
-    modifiedUpdatedData,
-    {
-      new: true,
-      runValidators: true,
-    },
-  );
+  const result = await Student.findOneAndUpdate({ id }, modifiedUpdatedData, {
+    new: true,
+    runValidators: true,
+  });
   return result;
 };
 
@@ -64,7 +60,7 @@ export const deleteStudentFromDB = async (id: string) => {
   const session = await mongoose.startSession();
   try {
     session.startTransaction();
-    const deletedStudent = await StudentModel.findOneAndUpdate(
+    const deletedStudent = await Student.findOneAndUpdate(
       { id },
       { isDeleted: true },
       { new: true, session },
@@ -93,45 +89,3 @@ export const deleteStudentFromDB = async (id: string) => {
     );
   }
 };
-
-// let searchTerm = '';
-// const filterQueryObj = { ...query };
-// if (query?.searchTerm) {
-//   searchTerm = query.searchTerm as string;
-// }
-// const excludeFields = ['searchTerm', 'sort', 'limit', 'page', 'fields'];
-// excludeFields.forEach((field) => delete filterQueryObj[field]);
-// let sort = '-createdAt';
-// if (query?.sort) {
-//   sort = query?.sort as string;
-// }
-// let limit = 0;
-// if (query?.limit) {
-//   limit = Number(query?.limit) as number;
-// }
-// let page = 0;
-// let skip = 0;
-// if (query?.page) {
-//   page = Number(query?.page);
-//   skip = (page - 1) * limit;
-// }
-// let fields = '-__v';
-// if (query?.fields) {
-//   fields = (query?.fields as string).split(',').join(' ');
-// }
-
-// const searchQuery = StudentModel.find({
-//   $or: studentSearchableField.map((field) => ({
-//     [field]: { $regex: searchTerm, $options: 'i' },
-//   })),
-// });
-// const filterQuery = searchQuery.find(filterQueryObj);
-// const sortQuery = filterQuery.sort(sort);
-// const paginationQuery = sortQuery.skip(skip);
-// const limitQuery = paginationQuery.limit(limit);
-
-// const result = await limitQuery
-//   .select(fields)
-//   .populate('user')
-//   .populate('admissionSemester');
-// return result;

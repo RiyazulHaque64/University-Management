@@ -1,4 +1,6 @@
 import httpStatus from 'http-status';
+import { Types } from 'mongoose';
+import QueryBuilder from '../../builder/QueryBuilder';
 import AppError from '../../error/appError';
 import { TAcademicDepartment } from '../academicDepartment/academicDepartment.interface';
 import AcademicDepartment from '../academicDepartment/academicDepartment.model';
@@ -8,6 +10,7 @@ import {
   default as FacultyModel,
 } from '../faculty/faculty.model';
 import SemesterRegistration from '../semesterRegistration/semesterRegistration.model';
+import Student from '../student/student.model';
 import { TOfferedCourse } from './offeredCourse.interface';
 import OfferedCourse from './offeredCourse.model';
 import { hashTimeConflict } from './offeredCourse.utils';
@@ -91,6 +94,35 @@ const createOfferedCourseIntoDB = async (payload: TOfferedCourse) => {
   return result;
 };
 
+const getAllOfferedCoursesFromDB = async (query: Record<string, unknown>) => {
+  const searchableField = ['maxCapacity', 'section', 'startTime', 'endTime'];
+  const courseQuery = new QueryBuilder(
+    OfferedCourse.find().populate(
+      'semesterRegistration academicSemester academicFaculty academicDepartment course faculty',
+    ),
+    query,
+  )
+    .search(searchableField)
+    .filter()
+    .sort()
+    .paginate()
+    .fields();
+
+  const result = await courseQuery.queryModel;
+  // const meta = await courseQuery.countTotal()
+  return result;
+};
+
+const getSingleOfferedCourseFromDB = async (id: Types.ObjectId) => {
+  const result = await OfferedCourse.findById(id).populate(
+    'semesterRegistration academicSemester academicFaculty academicDepartment course faculty',
+  );
+  if (!result) {
+    throw new AppError(httpStatus.NOT_FOUND, "Offered course doesn't exists");
+  }
+  return result;
+};
+
 const updateOfferedCourseIntoDB = async (
   id: string,
   payload: Pick<TOfferedCourse, 'faculty' | 'days' | 'startTime' | 'endTime'>,
@@ -149,7 +181,47 @@ const updateOfferedCourseIntoDB = async (
   return result;
 };
 
+const getMyOfferedCoursesFromDB = async (userId: string) => {
+  const student = await Student.findOne({ id: userId, isDeleted: false });
+  if (!student) {
+    throw new AppError(httpStatus.NOT_FOUND, "Student doesn't exists");
+  }
+  const currentOngoingSemester = await SemesterRegistration.findOne({
+    status: 'ONGOING',
+  });
+  if (!currentOngoingSemester) {
+    throw new AppError(
+      httpStatus.NOT_FOUND,
+      'There is no ongoing semester registration',
+    );
+  }
+  const result = await OfferedCourse.aggregate([
+    {
+      $match: {
+        semesterRegistration: currentOngoingSemester._id,
+        academicDepartment: student.academicDepartment,
+        academicFaculty: student.academicFaculty,
+      },
+    },
+    {
+      $lookup: {
+        from: 'courses',
+        foreignField: '_id',
+        localField: 'course',
+        as: 'course',
+      },
+    },
+    {
+      $unwind: '$course',
+    },
+  ]);
+  return result;
+};
+
 export const OfferedCourseServices = {
   createOfferedCourseIntoDB,
   updateOfferedCourseIntoDB,
+  getAllOfferedCoursesFromDB,
+  getSingleOfferedCourseFromDB,
+  getMyOfferedCoursesFromDB,
 };

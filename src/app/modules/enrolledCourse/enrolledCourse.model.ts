@@ -49,6 +49,6 @@ const enrolledCourseSchema = new Schema<TEnrolledCourse>({
   isCompleted: { type: Boolean, default: false },
 });
 
-const EnrolledCourseModel = model('EnrolledCourse', enrolledCourseSchema);
+const EnrolledCourse = model('EnrolledCourse', enrolledCourseSchema);
 
-export default EnrolledCourseModel;
+export default EnrolledCourse;

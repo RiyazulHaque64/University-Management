@@ -14,15 +14,32 @@ router.post(
   OfferedCourseControllers.createOfferedCourse,
 );
 
-router.patch(
-  '/:id',
-  auth(USER_ROLE.superAdmin, USER_ROLE.admin),
-  validateRequest(OfferedCourseValidations.updateOfferedCourseValidationSchema),
-  OfferedCourseControllers.updateOfferedCourse,
+router.get(
+  '/my-offered-courses',
+  auth(USER_ROLE.student),
+  OfferedCourseControllers.getMyOfferedCourses,
 );
 
 router.get(
-  '/my-offered-courses',
+  '/',
+  auth(USER_ROLE.superAdmin, USER_ROLE.admin, USER_ROLE.faculty),
+  OfferedCourseControllers.getAllOfferedCourse,
+);
+
+router.get(
+  '/:id',
+  auth(
+    USER_ROLE.superAdmin,
+    USER_ROLE.admin,
+    USER_ROLE.faculty,
+    USER_ROLE.student,
+  ),
+  OfferedCourseControllers.getSingleOfferedCourse,
+);
+
+router.patch(
+  '/:id',
+  auth(USER_ROLE.superAdmin, USER_ROLE.admin),
   validateRequest(OfferedCourseValidations.updateOfferedCourseValidationSchema),
   OfferedCourseControllers.updateOfferedCourse,
 );

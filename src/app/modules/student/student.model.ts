@@ -141,6 +141,14 @@ const studentSchema = new Schema<TStudent, StudentMethodsModel, StudentMethods>(
       type: Schema.Types.ObjectId,
       ref: 'AcademicSemester',
     },
+    academicDepartment: {
+      type: Schema.Types.ObjectId,
+      ref: 'AcademicDepartment',
+    },
+    academicFaculty: {
+      type: Schema.Types.ObjectId,
+      ref: 'AcademicFaculty',
+    },
     isDeleted: {
       type: Boolean,
       default: false,
@@ -152,11 +160,10 @@ const studentSchema = new Schema<TStudent, StudentMethodsModel, StudentMethods>(
 );
 
 studentSchema.methods.isUserExists = async function (id: string) {
-  const existingUser = await StudentModel.findOne({ id });
+  const existingUser = await Student.findOne({ id });
   return existingUser;
 };
 
-export const StudentModel = model<TStudent, StudentMethodsModel>(
-  'Student',
-  studentSchema,
-);
+const Student = model<TStudent, StudentMethodsModel>('Student', studentSchema);
+
+export default Student;
