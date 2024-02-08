@@ -1,5 +1,6 @@
 import httpStatus from 'http-status';
 import mongoose from 'mongoose';
+import QueryBuilder from '../../builder/QueryBuilder';
 import AppError from '../../error/appError';
 import CourseModel from '../course/course.model';
 import Faculty from '../faculty/faculty.model';
@@ -187,7 +188,36 @@ const updateEnrolledCourseMarksIntoDB = async (
   return result;
 };
 
+const getMyEnrolledCoursesFromDB = async (
+  userId: string,
+  query: Record<string, unknown>,
+) => {
+  const searchableField = ['grade', 'gradePoints'];
+  const student = await Student.findOne({ id: userId });
+  if (!student) {
+    throw new AppError(httpStatus.NOT_FOUND, "Student doesn't exists");
+  }
+  const myEnrolledCourseQuery = new QueryBuilder(
+    EnrolledCourse.find({ student: student._id }).populate(
+      'semesterRegistration academicSemester academicFaculty academicDepartment offeredCourse course student faculty',
+    ),
+    query,
+  )
+    .search(searchableField)
+    .filter()
+    .sort()
+    .paginate()
+    .fields();
+  const result = await myEnrolledCourseQuery.queryModel;
+  const meta = await myEnrolledCourseQuery.countTotal();
+  return {
+    meta,
+    result,
+  };
+};
+
 export const EnrolledCourseServices = {
   enrolledCourseIntoDB,
   updateEnrolledCourseMarksIntoDB,
+  getMyEnrolledCoursesFromDB,
 };

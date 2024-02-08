@@ -35,14 +35,14 @@ class QueryBuilder<T> {
     return this;
   }
   paginate() {
-    const limit = Number(this?.query?.limit) || 0;
+    const limit = Number(this?.query?.limit) || 10;
     const page = Number(this?.query?.page) || 1;
     const skip = (page - 1) * limit;
     this.queryModel = this.queryModel.skip(skip);
     return this;
   }
   limit() {
-    const limit = Number(this?.query?.limit) || 0;
+    const limit = Number(this?.query?.limit) || 10;
     this.queryModel = this.queryModel.limit(limit);
   }
   fields() {
@@ -54,7 +54,7 @@ class QueryBuilder<T> {
   async countTotal() {
     const filter = this.queryModel.getFilter();
     const total = await this.queryModel.model.countDocuments(filter);
-    const limit = Number(this?.query?.limit) || 0;
+    const limit = Number(this?.query?.limit) || 10;
     const page = Number(this?.query?.page) || 1;
     const totalPage = Math.ceil(total / limit);
     return {

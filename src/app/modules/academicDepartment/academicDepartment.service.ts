@@ -1,5 +1,6 @@
 import httpStatus from 'http-status';
 import { Types } from 'mongoose';
+import QueryBuilder from '../../builder/QueryBuilder';
 import AppError from '../../error/appError';
 import AcademicFaculty from '../academicFaculty/academicFaculty.model';
 import { TAcademicDepartment } from './academicDepartment.interface';
@@ -16,9 +17,25 @@ const createAcademicDepartmentIntoDB = async (payload: TAcademicDepartment) => {
   return result;
 };
 
-const getAllAcademicDepartmentFromDB = async () => {
-  const result = await AcademicDepartment.find().populate('academicFaculty');
-  return result;
+const getAllAcademicDepartmentFromDB = async (
+  query: Record<string, unknown>,
+) => {
+  const searchableField = ['name'];
+  const academicDepartmentQuery = new QueryBuilder(
+    AcademicDepartment.find().populate('academicFaculty'),
+    query,
+  )
+    .search(searchableField)
+    .filter()
+    .sort()
+    .paginate()
+    .fields();
+  const result = await academicDepartmentQuery.queryModel;
+  const meta = await academicDepartmentQuery.countTotal();
+  return {
+    result,
+    meta,
+  };
 };
 
 const getAnAcademicDepartmentFromDB = async (id: Types.ObjectId) => {

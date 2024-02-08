@@ -56,12 +56,14 @@ const updateOfferedCourse = catchAsync(async (req, res) => {
 const getMyOfferedCourses = catchAsync(async (req, res) => {
   const result = await OfferedCourseServices.getMyOfferedCoursesFromDB(
     req.user.userId,
+    req.query,
   );
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: 'Offered course are retrieved successfully',
-    data: result,
+    meta: result?.meta,
+    data: result?.result,
   });
 });
 
