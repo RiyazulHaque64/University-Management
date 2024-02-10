@@ -30,6 +30,6 @@ export const Months: TMonth[] = [
 
 export const semesterNameAndCodeMapper: TSemesterNameAndCodeMapper = {
   Autumn: '01',
-  Summar: '02',
+  Summer: '02',
   Fall: '03',
 };
