@@ -1,10 +1,10 @@
+import httpStatus from 'http-status';
 import mongoose from 'mongoose';
 import QueryBuilder from '../../builder/QueryBuilder';
 import AppError from '../../error/appError';
-import httpStatus from 'http-status';
 import { UserModel } from '../user/user.model';
-import AdminModel from './admin.model';
 import { TAdmin } from './admin.interface';
+import AdminModel from './admin.model';
 
 const getAllAdminsFromDB = async (query: Record<string, unknown>) => {
   const searchableField = [
@@ -22,11 +22,16 @@ const getAllAdminsFromDB = async (query: Record<string, unknown>) => {
     .search(searchableField)
     .filter()
     .sort()
+    .limit()
     .paginate()
     .fields();
 
   const result = await adminQuery.queryModel;
-  return result;
+  const meta = await adminQuery.countTotal();
+  return {
+    result,
+    meta,
+  };
 };
 
 const getAdminFromDB = async (id: string) => {

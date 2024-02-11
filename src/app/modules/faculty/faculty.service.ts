@@ -22,11 +22,16 @@ const getAllFacultiesFromDB = async (query: Record<string, unknown>) => {
     .search(searchableField)
     .filter()
     .sort()
+    .limit()
     .paginate()
     .fields();
 
   const result = await facultyQuery.queryModel;
-  return result;
+  const meta = await facultyQuery.countTotal();
+  return {
+    result,
+    meta,
+  };
 };
 
 const getFacultyFromDB = async (id: Types.ObjectId) => {
