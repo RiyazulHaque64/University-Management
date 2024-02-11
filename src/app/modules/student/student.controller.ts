@@ -1,12 +1,12 @@
 import httpStatus from 'http-status';
+import catchAsync from '../../utils/catchAsync';
+import sendResponse from '../../utils/sendResponse';
 import {
   deleteStudentFromDB,
   getAllStudentsFromDB,
   getSingleStudentFromDB,
   updateStudentIntoDB,
 } from './student.service';
-import sendResponse from '../../utils/sendResponse';
-import catchAsync from '../../utils/catchAsync';
 
 export const getAllStudents = catchAsync(async (req, res) => {
   const result = await getAllStudentsFromDB(req.query);
@@ -14,7 +14,8 @@ export const getAllStudents = catchAsync(async (req, res) => {
     statusCode: httpStatus.OK,
     success: true,
     message: 'Students are retrieved successfully',
-    data: result,
+    meta: result.meta,
+    data: result.result,
   });
 });
 

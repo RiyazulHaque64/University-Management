@@ -15,10 +15,15 @@ export const getAllStudentsFromDB = async (query: Record<string, unknown>) => {
     .search(studentSearchableField)
     .filter()
     .sort()
+    .limit()
     .paginate()
     .fields();
   const result = await studentQuery.queryModel;
-  return result;
+  const meta = await studentQuery.countTotal();
+  return {
+    meta,
+    result,
+  };
 };
 
 export const getSingleStudentFromDB = async (id: string) => {

@@ -30,7 +30,7 @@ class QueryBuilder<T> {
   }
   sort() {
     const sort =
-      (this?.query?.sort as string)?.split(',')?.join(' ') || '-createdAt';
+      (this?.query?.sort as string)?.split(',')?.join(' ') || 'createdAt';
     this.queryModel = this.queryModel.sort(sort as string);
     return this;
   }
@@ -44,6 +44,7 @@ class QueryBuilder<T> {
   limit() {
     const limit = Number(this?.query?.limit) || 10;
     this.queryModel = this.queryModel.limit(limit);
+    return this;
   }
   fields() {
     const fields =
